@@ -508,7 +508,11 @@ async function startMessageLoop(): Promise<void> {
             saveState();
             // Show typing indicator while the container processes the piped message
             channel
-              .setTyping?.(chatJid, true, messagesToSend[messagesToSend.length - 1].id)
+              .setTyping?.(
+                chatJid,
+                true,
+                messagesToSend[messagesToSend.length - 1].id,
+              )
               ?.catch((err) =>
                 logger.warn({ chatJid, err }, 'Failed to set typing indicator'),
               );

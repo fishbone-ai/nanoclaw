@@ -17,6 +17,11 @@ groups/main/*
 groups/global/*
 !groups/main/CLAUDE.md
 !groups/global/CLAUDE.md
+!groups/global/MEMORY.md
+!groups/global/FISHBONE.md
+!groups/global/learnings/
+groups/global/learnings/*
+!groups/global/learnings/*.md
 
 # Secrets
 *.keys.json

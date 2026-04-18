@@ -35,7 +35,11 @@ export class SlackChannel implements Channel {
   private app: App;
   private botUserId: string | undefined;
   private connected = false;
-  private outgoingQueue: Array<{ jid: string; text: string; replyToMessageId?: string }> = [];
+  private outgoingQueue: Array<{
+    jid: string;
+    text: string;
+    replyToMessageId?: string;
+  }> = [];
   private flushing = false;
   private userNameCache = new Map<string, string>();
   // Maps inbound message ts → thread root ts, so replies always land in the
@@ -111,8 +115,7 @@ export class SlackChannel implements Channel {
       // Map this message's ts to its thread root so sendMessage can reply
       // deterministically to the correct thread, regardless of interleaving.
       if (!isBotMessage) {
-        const threadRoot =
-          (msg as { thread_ts?: string }).thread_ts || msg.ts;
+        const threadRoot = (msg as { thread_ts?: string }).thread_ts || msg.ts;
         if (threadRoot) this.replyThreadTs.set(msg.ts, threadRoot);
       }
 
@@ -164,7 +167,10 @@ export class SlackChannel implements Channel {
                 : ASSISTANT_NAME;
           }
         } catch (err) {
-          logger.debug({ err, threadTs }, 'Slack: failed to fetch thread parent');
+          logger.debug(
+            { err, threadTs },
+            'Slack: failed to fetch thread parent',
+          );
         }
       }
 
@@ -210,7 +216,11 @@ export class SlackChannel implements Channel {
     await this.syncChannelMetadata();
   }
 
-  async sendMessage(jid: string, text: string, replyToMessageId?: string): Promise<void> {
+  async sendMessage(
+    jid: string,
+    text: string,
+    replyToMessageId?: string,
+  ): Promise<void> {
     const channelId = jid.replace(/^slack:/, '');
 
     if (!this.connected) {
@@ -243,10 +253,7 @@ export class SlackChannel implements Channel {
           });
         }
       }
-      logger.info(
-        { jid, length: text.length, threadTs },
-        'Slack message sent',
-      );
+      logger.info({ jid, length: text.length, threadTs }, 'Slack message sent');
     } catch (err) {
       this.outgoingQueue.push({ jid, text });
       logger.warn(
@@ -271,7 +278,11 @@ export class SlackChannel implements Channel {
 
   // Use a reaction on the user's message as a typing indicator — no extra
   // messages, no thread noise. Add ⏳ when processing starts, remove when done.
-  async setTyping(jid: string, isTyping: boolean, messageId?: string): Promise<void> {
+  async setTyping(
+    jid: string,
+    isTyping: boolean,
+    messageId?: string,
+  ): Promise<void> {
     if (!this.connected || !messageId) return;
     const channelId = jid.replace(/^slack:/, '');
 
@@ -290,7 +301,10 @@ export class SlackChannel implements Channel {
         });
       }
     } catch (err) {
-      logger.debug({ err, jid, isTyping, messageId }, 'Slack: failed to update typing reaction');
+      logger.debug(
+        { err, jid, isTyping, messageId },
+        'Slack: failed to update typing reaction',
+      );
     }
   }
 
