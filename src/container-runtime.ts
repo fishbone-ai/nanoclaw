@@ -6,10 +6,30 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 
+import { readEnvFile } from './env.js';
 import { logger } from './logger.js';
 
 /** The container runtime binary name. */
 export const CONTAINER_RUNTIME_BIN = 'docker';
+
+const HOST_PROJECT_ROOT =
+  process.env.HOST_PROJECT_ROOT ||
+  readEnvFile(['HOST_PROJECT_ROOT']).HOST_PROJECT_ROOT ||
+  '';
+
+/**
+ * Translate an in-process path to the path the container runtime daemon sees.
+ * Needed when NanoClaw runs inside a container (e.g. HA addon) that talks to
+ * a Docker daemon on the host — the daemon resolves mount sources against
+ * the host filesystem, not the addon's.
+ */
+export function toHostPath(p: string): string {
+  if (!HOST_PROJECT_ROOT) return p;
+  const cwd = process.cwd();
+  if (p === cwd) return HOST_PROJECT_ROOT;
+  if (p.startsWith(cwd + '/')) return HOST_PROJECT_ROOT + p.slice(cwd.length);
+  return p;
+}
 
 /** Hostname containers use to reach the host machine. */
 export const CONTAINER_HOST_GATEWAY = 'host.docker.internal';
@@ -42,9 +62,16 @@ function detectProxyBindHost(): string {
 
 /** CLI args needed for the container to resolve the host gateway. */
 export function hostGatewayArgs(): string[] {
-  // On Linux, host.docker.internal isn't built-in — add it explicitly
+  // On Linux, host.docker.internal isn't built-in — add it explicitly.
+  // HOST_GATEWAY_IP lets deployments (e.g. HA addons) override the resolution
+  // when the default `host-gateway` magic value doesn't point to a reachable
+  // address for the credential proxy.
   if (os.platform() === 'linux') {
-    return ['--add-host=host.docker.internal:host-gateway'];
+    const override =
+      process.env.HOST_GATEWAY_IP ||
+      readEnvFile(['HOST_GATEWAY_IP']).HOST_GATEWAY_IP;
+    const target = override || 'host-gateway';
+    return [`--add-host=host.docker.internal:${target}`];
   }
   return [];
 }
@@ -54,7 +81,7 @@ export function readonlyMountArgs(
   hostPath: string,
   containerPath: string,
 ): string[] {
-  return ['-v', `${hostPath}:${containerPath}:ro`];
+  return ['-v', `${toHostPath(hostPath)}:${containerPath}:ro`];
 }
 
 /** Stop a container by name. Uses execFileSync to avoid shell injection. */

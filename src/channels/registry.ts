@@ -9,6 +9,9 @@ export interface ChannelOpts {
   onMessage: OnInboundMessage;
   onChatMetadata: OnChatMetadata;
   registeredGroups: () => Record<string, RegisteredGroup>;
+  // Optional: lets a channel auto-register a chat on first interaction
+  // (e.g. when the bot is @-mentioned in a new Slack channel).
+  registerGroup?: (jid: string, group: RegisteredGroup) => void;
 }
 
 export type ChannelFactory = (opts: ChannelOpts) => Channel | null;

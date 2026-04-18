@@ -24,7 +24,17 @@ RUN apt-get update && apt-get install -y \
     libxshmfence1 \
     curl \
     git \
+    python3 \
+    python3-pip \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages for meeting transcriber
+RUN pip3 install --no-cache-dir --break-system-packages \
+    google-genai>=1.0.0 \
+    google-api-python-client>=2.0.0 \
+    google-auth>=2.0.0 \
+    requests>=2.28.0
 
 # Set Chromium path for agent-browser
 ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium

@@ -24,8 +24,10 @@ import {
   hostGatewayArgs,
   readonlyMountArgs,
   stopContainer,
+  toHostPath,
 } from './container-runtime.js';
 import { detectAuthMode } from './credential-proxy.js';
+import { readEnvFile } from './env.js';
 import { validateAdditionalMounts } from './mount-security.js';
 import { RegisteredGroup } from './types.js';
 
@@ -183,6 +185,24 @@ function buildVolumeMounts(
     readonly: false,
   });
 
+  // Claude CLI's top-level config at $HOME/.claude.json (outside .claude/).
+  // Without persistence the CLI re-creates it each run and loses login state,
+  // which shows up as "Claude configuration file not found" on startup.
+  const claudeJsonFile = path.join(
+    DATA_DIR,
+    'sessions',
+    group.folder,
+    '.claude.json',
+  );
+  if (!fs.existsSync(claudeJsonFile)) {
+    fs.writeFileSync(claudeJsonFile, '{}\n');
+  }
+  mounts.push({
+    hostPath: claudeJsonFile,
+    containerPath: '/home/node/.claude.json',
+    readonly: false,
+  });
+
   // Per-group IPC namespace: each group gets its own IPC directory
   // This prevents cross-group privilege escalation via IPC
   const groupIpcDir = resolveGroupIpcPath(group.folder);
@@ -267,15 +287,44 @@ function buildContainerArgs(
     args.push('-e', 'CLAUDE_CODE_OAUTH_TOKEN=placeholder');
   }
 
+  // Pass through additional service credentials the agent or its scheduled
+  // scripts need (Linear, Slack, etc.). Single-user trusted-container setup:
+  // these reach the agent's env directly (not via the credential proxy).
+  const passthroughEnv = readEnvFile([
+    'LINEAR_API_KEY',
+    'SLACK_BOT_TOKEN',
+    'GEMINI_API_KEY',
+    'GOOGLE_SERVICE_ACCOUNT_JSON',
+  ]);
+  for (const [key, value] of Object.entries(passthroughEnv)) {
+    if (value) args.push('-e', `${key}=${value}`);
+  }
+
   // Runtime-specific args for host gateway resolution
   args.push(...hostGatewayArgs());
 
+  // CONTAINER_NETWORK lets deployments put agent containers on a shared
+  // network (e.g. HA addon → `hassio`) so they can reach the credential
+  // proxy running on a sibling/host that isn't exposed on the default bridge.
+  const network =
+    process.env.CONTAINER_NETWORK ||
+    readEnvFile(['CONTAINER_NETWORK']).CONTAINER_NETWORK;
+  if (network) {
+    args.push('--network', network);
+  }
+
   // Run as host user so bind-mounted files are accessible.
-  // Skip when running as root (uid 0), as the container's node user (uid 1000),
-  // or when getuid is unavailable (native Windows without WSL).
+  // When host is root (e.g. HA addon), run container as root too — the
+  // default `node` user (uid 1000) can't write to files NanoClaw created
+  // as root on shared bind mounts. IS_SANDBOX=1 tells Claude CLI it's
+  // safe to allow --dangerously-skip-permissions under root.
   const hostUid = process.getuid?.();
   const hostGid = process.getgid?.();
-  if (hostUid != null && hostUid !== 0 && hostUid !== 1000) {
+  if (hostUid === 0) {
+    args.push('--user', '0:0');
+    args.push('-e', 'HOME=/home/node');
+    args.push('-e', 'IS_SANDBOX=1');
+  } else if (hostUid != null && hostUid !== 1000) {
     args.push('--user', `${hostUid}:${hostGid}`);
     args.push('-e', 'HOME=/home/node');
   }
@@ -284,7 +333,7 @@ function buildContainerArgs(
     if (mount.readonly) {
       args.push(...readonlyMountArgs(mount.hostPath, mount.containerPath));
     } else {
-      args.push('-v', `${mount.hostPath}:${mount.containerPath}`);
+      args.push('-v', `${toHostPath(mount.hostPath)}:${mount.containerPath}`);
     }
   }
 

@@ -26,6 +26,7 @@ export interface SlackChannelOpts {
   onMessage: OnInboundMessage;
   onChatMetadata: OnChatMetadata;
   registeredGroups: () => Record<string, RegisteredGroup>;
+  registerGroup?: (jid: string, group: RegisteredGroup) => void;
 }
 
 export class SlackChannel implements Channel {
@@ -34,9 +35,13 @@ export class SlackChannel implements Channel {
   private app: App;
   private botUserId: string | undefined;
   private connected = false;
-  private outgoingQueue: Array<{ jid: string; text: string }> = [];
+  private outgoingQueue: Array<{ jid: string; text: string; replyToMessageId?: string }> = [];
   private flushing = false;
   private userNameCache = new Map<string, string>();
+  // Maps inbound message ts → thread root ts, so replies always land in the
+  // correct thread regardless of interleaving. Keyed by msg.ts (not channel),
+  // so replying to an older thread sends the response there, not to the latest.
+  private replyThreadTs = new Map<string, string>();
 
   private opts: SlackChannelOpts;
 
@@ -79,10 +84,6 @@ export class SlackChannel implements Channel {
 
       if (!msg.text) return;
 
-      // Threaded replies are flattened into the channel conversation.
-      // The agent sees them alongside channel-level messages; responses
-      // always go to the channel, not back into the thread.
-
       const jid = `slack:${msg.channel}`;
       const timestamp = new Date(parseFloat(msg.ts) * 1000).toISOString();
       const isGroup = msg.channel_type !== 'im';
@@ -90,12 +91,30 @@ export class SlackChannel implements Channel {
       // Always report metadata for group discovery
       this.opts.onChatMetadata(jid, timestamp, undefined, 'slack', isGroup);
 
-      // Only deliver full messages for registered groups
-      const groups = this.opts.registeredGroups();
+      // Auto-register unknown chats on first interaction:
+      //   - DMs: any message (they're inherently 1:1 with the bot).
+      //   - Channels/groups: only when the bot is @-mentioned, so random
+      //     workspace members can't accidentally onboard the bot by posting.
+      let groups = this.opts.registeredGroups();
+      if (!groups[jid] && this.opts.registerGroup) {
+        const isMentioned =
+          !!this.botUserId && msg.text.includes(`<@${this.botUserId}>`);
+        if (!isGroup || isMentioned) {
+          await this.autoRegister(jid, msg.channel, isGroup);
+          groups = this.opts.registeredGroups();
+        }
+      }
       if (!groups[jid]) return;
 
-      const isBotMessage =
-        !!msg.bot_id || msg.user === this.botUserId;
+      const isBotMessage = !!msg.bot_id || msg.user === this.botUserId;
+
+      // Map this message's ts to its thread root so sendMessage can reply
+      // deterministically to the correct thread, regardless of interleaving.
+      if (!isBotMessage) {
+        const threadRoot =
+          (msg as { thread_ts?: string }).thread_ts || msg.ts;
+        if (threadRoot) this.replyThreadTs.set(msg.ts, threadRoot);
+      }
 
       let senderName: string;
       if (isBotMessage) {
@@ -113,8 +132,39 @@ export class SlackChannel implements Channel {
       let content = msg.text;
       if (this.botUserId && !isBotMessage) {
         const mentionPattern = `<@${this.botUserId}>`;
-        if (content.includes(mentionPattern) && !TRIGGER_PATTERN.test(content)) {
+        if (
+          content.includes(mentionPattern) &&
+          !TRIGGER_PATTERN.test(content)
+        ) {
           content = `@${ASSISTANT_NAME} ${content}`;
+        }
+      }
+
+      // For thread replies, fetch the parent message so the agent has context
+      // of what's being replied to (e.g. Ohav replying to the bot's task check).
+      const threadTs = (msg as { thread_ts?: string }).thread_ts;
+      const isThreadReply = !isBotMessage && threadTs && threadTs !== msg.ts;
+      let replyToContent: string | undefined;
+      let replyToSenderName: string | undefined;
+      if (isThreadReply) {
+        try {
+          const replies = await this.app.client.conversations.replies({
+            channel: msg.channel,
+            ts: threadTs,
+            limit: 1,
+            inclusive: true,
+          });
+          const parent = replies.messages?.[0];
+          if (parent?.text) {
+            replyToContent = parent.text;
+            replyToSenderName = parent.bot_id
+              ? ASSISTANT_NAME
+              : parent.user
+                ? ((await this.resolveUserName(parent.user)) ?? parent.user)
+                : ASSISTANT_NAME;
+          }
+        } catch (err) {
+          logger.debug({ err, threadTs }, 'Slack: failed to fetch thread parent');
         }
       }
 
@@ -127,6 +177,9 @@ export class SlackChannel implements Channel {
         timestamp,
         is_from_me: isBotMessage,
         is_bot_message: isBotMessage,
+        reply_to_message_id: isThreadReply ? threadTs : undefined,
+        reply_to_message_content: replyToContent,
+        reply_to_sender_name: replyToSenderName,
       });
     });
   }
@@ -142,13 +195,13 @@ export class SlackChannel implements Channel {
       this.botUserId = auth.user_id as string;
       logger.info({ botUserId: this.botUserId }, 'Connected to Slack');
     } catch (err) {
-      logger.warn(
-        { err },
-        'Connected to Slack but failed to get bot user ID',
-      );
+      logger.warn({ err }, 'Connected to Slack but failed to get bot user ID');
     }
 
     this.connected = true;
+
+    // Promote already-registered channels to isMain if SLACK_IS_MAIN=true
+    this.promoteSlackChannels();
 
     // Flush any messages queued before connection
     await this.flushOutgoingQueue();
@@ -157,11 +210,11 @@ export class SlackChannel implements Channel {
     await this.syncChannelMetadata();
   }
 
-  async sendMessage(jid: string, text: string): Promise<void> {
+  async sendMessage(jid: string, text: string, replyToMessageId?: string): Promise<void> {
     const channelId = jid.replace(/^slack:/, '');
 
     if (!this.connected) {
-      this.outgoingQueue.push({ jid, text });
+      this.outgoingQueue.push({ jid, text, replyToMessageId });
       logger.info(
         { jid, queueSize: this.outgoingQueue.length },
         'Slack disconnected, message queued',
@@ -169,19 +222,31 @@ export class SlackChannel implements Channel {
       return;
     }
 
+    const threadTs = replyToMessageId
+      ? this.replyThreadTs.get(replyToMessageId)
+      : undefined;
     try {
-      // Slack limits messages to ~4000 characters; split if needed
+      // Slack limits messages to ~4000 characters; split if needed.
+      // Every chunk goes into the same thread so the reply reads as one.
       if (text.length <= MAX_MESSAGE_LENGTH) {
-        await this.app.client.chat.postMessage({ channel: channelId, text });
+        await this.app.client.chat.postMessage({
+          channel: channelId,
+          text,
+          thread_ts: threadTs,
+        });
       } else {
         for (let i = 0; i < text.length; i += MAX_MESSAGE_LENGTH) {
           await this.app.client.chat.postMessage({
             channel: channelId,
             text: text.slice(i, i + MAX_MESSAGE_LENGTH),
+            thread_ts: threadTs,
           });
         }
       }
-      logger.info({ jid, length: text.length }, 'Slack message sent');
+      logger.info(
+        { jid, length: text.length, threadTs },
+        'Slack message sent',
+      );
     } catch (err) {
       this.outgoingQueue.push({ jid, text });
       logger.warn(
@@ -204,11 +269,29 @@ export class SlackChannel implements Channel {
     await this.app.stop();
   }
 
-  // Slack does not expose a typing indicator API for bots.
-  // This no-op satisfies the Channel interface so the orchestrator
-  // doesn't need channel-specific branching.
-  async setTyping(_jid: string, _isTyping: boolean): Promise<void> {
-    // no-op: Slack Bot API has no typing indicator endpoint
+  // Use a reaction on the user's message as a typing indicator — no extra
+  // messages, no thread noise. Add ⏳ when processing starts, remove when done.
+  async setTyping(jid: string, isTyping: boolean, messageId?: string): Promise<void> {
+    if (!this.connected || !messageId) return;
+    const channelId = jid.replace(/^slack:/, '');
+
+    try {
+      if (isTyping) {
+        await this.app.client.reactions.add({
+          channel: channelId,
+          name: 'hourglass_flowing_sand',
+          timestamp: messageId,
+        });
+      } else {
+        await this.app.client.reactions.remove({
+          channel: channelId,
+          name: 'hourglass_flowing_sand',
+          timestamp: messageId,
+        });
+      }
+    } catch (err) {
+      logger.debug({ err, jid, isTyping, messageId }, 'Slack: failed to update typing reaction');
+    }
   }
 
   /**
@@ -245,9 +328,74 @@ export class SlackChannel implements Channel {
     }
   }
 
-  private async resolveUserName(
-    userId: string,
-  ): Promise<string | undefined> {
+  /**
+   * Auto-register a Slack chat on first interaction.
+   * When SLACK_IS_MAIN=true, every Slack chat registers as isMain with no
+   * trigger required, giving agents the same full-access mount as the main group.
+   */
+  private async autoRegister(
+    jid: string,
+    channelId: string,
+    isGroup: boolean,
+  ): Promise<void> {
+    if (!this.opts.registerGroup) return;
+
+    // Best-effort display name from Slack; fall back to channel id.
+    let name = channelId;
+    try {
+      const info = await this.app.client.conversations.info({
+        channel: channelId,
+      });
+      name =
+        info.channel?.name ||
+        (info.channel as { user?: string } | undefined)?.user ||
+        channelId;
+    } catch (err) {
+      logger.debug({ err, channelId }, 'conversations.info failed');
+    }
+
+    const folder = `slack_${channelId.toLowerCase()}`;
+    const trigger = `@${ASSISTANT_NAME}`;
+    const isMain = readEnvFile(['SLACK_IS_MAIN']).SLACK_IS_MAIN === 'true';
+
+    logger.info(
+      { jid, folder, name, isGroup, isMain },
+      'Slack: auto-registering new chat',
+    );
+
+    this.opts.registerGroup(jid, {
+      name,
+      folder,
+      trigger,
+      added_at: new Date().toISOString(),
+      requiresTrigger: isGroup && !isMain,
+      isMain,
+    });
+  }
+
+  /**
+   * Promote all already-registered Slack channels to isMain=true when
+   * SLACK_IS_MAIN=true. Called on connect so env changes take effect without
+   * requiring re-registration.
+   */
+  private promoteSlackChannels(): void {
+    if (!this.opts.registerGroup) return;
+    if (readEnvFile(['SLACK_IS_MAIN']).SLACK_IS_MAIN !== 'true') return;
+
+    const groups = this.opts.registeredGroups();
+    for (const [jid, existing] of Object.entries(groups)) {
+      if (jid.startsWith('slack:') && !existing.isMain) {
+        logger.info({ jid }, 'Slack: promoting channel to isMain=true');
+        this.opts.registerGroup(jid, {
+          ...existing,
+          requiresTrigger: false,
+          isMain: true,
+        });
+      }
+    }
+  }
+
+  private async resolveUserName(userId: string): Promise<string | undefined> {
     if (!userId) return undefined;
 
     const cached = this.userNameCache.get(userId);
@@ -275,12 +423,16 @@ export class SlackChannel implements Channel {
       while (this.outgoingQueue.length > 0) {
         const item = this.outgoingQueue.shift()!;
         const channelId = item.jid.replace(/^slack:/, '');
+        const threadTs = item.replyToMessageId
+          ? this.replyThreadTs.get(item.replyToMessageId)
+          : undefined;
         await this.app.client.chat.postMessage({
           channel: channelId,
           text: item.text,
+          thread_ts: threadTs,
         });
         logger.info(
-          { jid: item.jid, length: item.text.length },
+          { jid: item.jid, length: item.text.length, threadTs },
           'Queued Slack message sent',
         );
       }

@@ -36,3 +36,10 @@ groups/global/*
 .nanoclaw/
 
 agents-sdk-docs
+groups/global/.secrets/
+
+# Runtime
+nanoclaw.pid
+
+# Local Claude Code settings
+.claude/settings.local.json

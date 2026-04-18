@@ -255,7 +255,8 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
     }, IDLE_TIMEOUT);
   };
 
-  await channel.setTyping?.(chatJid, true);
+  const triggerMessageId = missedMessages[missedMessages.length - 1].id;
+  await channel.setTyping?.(chatJid, true, triggerMessageId);
   let hadError = false;
   let outputSentToUser = false;
 
@@ -270,7 +271,11 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
       const text = raw.replace(/<internal>[\s\S]*?<\/internal>/g, '').trim();
       logger.info({ group: group.name }, `Agent output: ${raw.length} chars`);
       if (text) {
-        await channel.sendMessage(chatJid, text);
+        await channel.sendMessage(chatJid, text, triggerMessageId);
+        if (!outputSentToUser) {
+          // Clear typing indicator as soon as first output reaches the user
+          await channel.setTyping?.(chatJid, false, triggerMessageId);
+        }
         outputSentToUser = true;
       }
       // Only reset idle timer on actual results, not session-update markers (result: null)
@@ -286,7 +291,10 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
     }
   });
 
-  await channel.setTyping?.(chatJid, false);
+  // Fallback: clear typing indicator if no output was sent (error path)
+  if (!outputSentToUser) {
+    await channel.setTyping?.(chatJid, false, triggerMessageId);
+  }
   if (idleTimer) clearTimeout(idleTimer);
 
   if (output === 'error' || hadError) {
@@ -500,7 +508,7 @@ async function startMessageLoop(): Promise<void> {
             saveState();
             // Show typing indicator while the container processes the piped message
             channel
-              .setTyping?.(chatJid, true)
+              .setTyping?.(chatJid, true, messagesToSend[messagesToSend.length - 1].id)
               ?.catch((err) =>
                 logger.warn({ chatJid, err }, 'Failed to set typing indicator'),
               );
@@ -648,6 +656,7 @@ async function main(): Promise<void> {
       isGroup?: boolean,
     ) => storeChatMetadata(chatJid, timestamp, name, channel, isGroup),
     registeredGroups: () => registeredGroups,
+    registerGroup,
   };
 
   // Create and connect all registered channels.
