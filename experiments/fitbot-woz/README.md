@@ -18,7 +18,7 @@ Manual simulation: operator + ChatGPT behind the scenes, one dedicated ChatGPT s
 ## Daily workflow
 
 1. **Morning** (per user's chosen time): in their ChatGPT session, send `[שליחה: צ'ק-אין בוקר]` → review → paste to WhatsApp. If edited: `[נשלח: <actual text> | סיבה: <why>]` back to ChatGPT.
-2. **Throughout day**: user message arrives → paste into their ChatGPT session. Photos: paste the image directly (the bot sees it). Review response, send, confirm `[נשלח: ...]` if edited.
+2. **Throughout day**: user message arrives → paste into their ChatGPT session. Photos: paste the image directly (the bot sees it). If time is relevant (late-night, near-workout, etc.), prepend `[זמן: HH:MM]`. Review response, send, confirm `[נשלח: ...]` if edited.
 3. **Evening** (per user's chosen time): `[שליחה: צ'ק-אין ערב]` → review → send.
 4. **24h silence**: one-time `[שליחה: אישור שתיקה]`. No further nudges regardless.
 5. **End of day**: update [tracker.md](tracker.md); log anything notable in [notes.md](notes.md).
