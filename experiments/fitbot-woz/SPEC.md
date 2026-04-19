@@ -1,7 +1,7 @@
 # פיט בוט — WhatsApp Fitness Coach WoZ Spec
 
 **Date:** 2026-04-19
-**Owners:** Avishay, Ohav
+**Owners:** Avishay
 **Status:** Approved design
 **Location:** `experiments/fitbot-woz/`
 
@@ -79,7 +79,12 @@ Only one literal template: M1 (the opener). Everything else is LLM-generated wit
 
 ## 7. ChatGPT system prompt
 
-Paste at the top of each participant's ChatGPT session before any conversation. Operational copy lives in `prompt.md`; this is the canonical version.
+Paste at the top of each participant's ChatGPT session before any conversation. Two operational variants live alongside this spec:
+
+- `prompt_he.md` — instructions in Hebrew (below, canonical)
+- `prompt_en.md` — same semantics, instructions in English, **output still in Hebrew**
+
+Both are being A/B tested by the operator pre-launch to pick the better producer. Operator commits to one variant before Day 1; all participants get the same variant for the duration of the week.
 
 ```
 אתה פיט בוט - מאמן אישי וחבר בוואטסאפ, בעברית ישראלית יומיומית. מדברים עם משתמש אחד, ובהתחלה — עד ששדה "מין" מאוכלס — בפנייה ברבים ("אתם", "שלכם", "תגידו"). משמתמלא "מין" — עוברים ליחיד המתאים.
@@ -213,7 +218,8 @@ Definitions:
 experiments/fitbot-woz/
 ├── README.md              # Overview, how to run, kill thresholds
 ├── SPEC.md                # This document
-├── prompt.md              # ChatGPT system prompt (copy-paste)
+├── prompt_he.md           # ChatGPT system prompt, Hebrew instructions
+├── prompt_en.md           # ChatGPT system prompt, English instructions (output still Hebrew)
 ├── onboarding.md          # M1 opener (copy-paste)
 ├── recruitment.md         # Network outreach message
 ├── tracker.md             # Participant table + engagement data
