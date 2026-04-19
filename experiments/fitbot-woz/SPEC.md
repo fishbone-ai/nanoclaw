@@ -52,7 +52,7 @@ Those get tested later, only if this week's signal is strong.
 3. **Evening check-in** — proactive, scheduled, 1–2 sentences, rotated phrasing.
 4. **Meal logging** — reactive; text or photo → rough macros (±20%) + one observation matching goal; never prescriptive.
 5. **Open Q&A** — reactive; handles fitness questions, workout/recipe requests (from curated library), emotional moments (listen first), off-topic (brief redirect).
-6. **Silence recovery** — triggered after 24h no-reply; one personalized nudge using whatever context exists; no further nudges after 48h.
+6. **Silence recovery** — triggered 24h after the user's last reply; one personalized nudge; no further messages until the user responds (even after additional silence).
 
 **Explicitly excluded from week 1:** streak tracking, weekly summary, workout history, progress charts, payment, referrals.
 
@@ -190,18 +190,22 @@ Paste at the top of each participant's ChatGPT session before any conversation. 
 
 ## 9. Success criteria & kill thresholds
 
+Definitions:
+- **Active-on-day-N** = the participant replied to at least one of that day's two check-ins (morning or evening).
+- **Unsolicited message** = a user-initiated message that is not a reply to a bot check-in (e.g., sending a meal photo mid-afternoon, asking a question in the evening).
+
 **Kill immediately if:**
-- Day 5 reply rate <40% (more than half the sample has gone dormant).
+- On Day 5, fewer than 40% of participants are active-on-day-5.
 - Hebrew quality is clearly off and participants comment on it unprompted.
 - Any participant reports feeling unsafe or harmed by advice.
 
 **Green light (proceed to ad test in week 2):**
-- Day 7 engagement ≥60%.
-- Unsolicited user-initiated messages from multiple participants (real pull).
-- Qualitative: at least 3 participants say something like "this is actually useful."
+- On Day 7, at least 60% of participants are active-on-day-7.
+- At least 3 participants sent ≥1 unsolicited message during the week (real pull, not just compliance).
+- Qualitative: at least 3 participants say something like "this is actually useful," unprompted.
 
 **Middle case (iterate, don't ship, don't kill):**
-- 40–60% engagement with some strong qualitative signals → rerun with adjusted prompt/tone, not full kill.
+- 40–60% active on Day 7 with strong qualitative signals → rerun with adjusted prompt/tone, not full kill.
 
 ## 10. Resource directory layout
 
