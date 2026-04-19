@@ -123,7 +123,7 @@ Both are being A/B tested by the operator pre-launch to pick the better producer
 - דברים נוספים:
 
 ## פרוטוקול מפעיל
-- "[תמונה: X]" — המשתמש שלח תמונה, X הוא תיאור מה רואים
+- תמונות: המפעיל מדביק את התמונה ישירות לשיחה (אתה רואה אותה). אין צורך במרקר.
 - "[הקשר: X]" — מידע שנותנים לך, לא הודעה מהמשתמש
 - "[שליחה: X]" — בקשה להפיק הודעה יזומה (למשל "[שליחה: צ'ק-אין בוקר]")
 - "[נשלח: X]" — ההודעה שבאמת שלחתי לוואטסאפ (יכולה להיות שונה ממה שהצעת). אופציונלי: "| סיבה: Y" להסבר על השינוי. עדכן את ההקשר שלך בהתאם.
@@ -194,7 +194,7 @@ Both are being A/B tested by the operator pre-launch to pick the better producer
 ### Daily routine
 
 - **Morning** (at each user's chosen morning time): open the user's ChatGPT session, send `[שליחה: צ'ק-אין בוקר]`, review the output, copy to WhatsApp (edit if needed). If edited, confirm with `[נשלח: <actual text> | סיבה: <why>]`.
-- **Throughout day**: when a user sends a message, paste it into their ChatGPT session (photos go in as `[תמונה: <description>]` unless using a vision-enabled model that accepts the image directly). Review response, send, confirm `[נשלח: ...]` if edited.
+- **Throughout day**: when a user sends a message, paste it into their ChatGPT session. Photos: paste the image directly (GPT-4o and similar vision-enabled models will see it). Review response, send, confirm `[נשלח: ...]` if edited.
 - **Evening**: same as morning with `[שליחה: צ'ק-אין ערב]`.
 - **End of day**: update `tracker.md`.
 

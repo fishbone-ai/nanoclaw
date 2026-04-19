@@ -18,7 +18,7 @@ Manual simulation: operator + ChatGPT behind the scenes, one dedicated ChatGPT s
 ## Daily workflow
 
 1. **Morning** (per user's chosen time): in their ChatGPT session, send `[שליחה: צ'ק-אין בוקר]` → review → paste to WhatsApp. If edited: `[נשלח: <actual text> | סיבה: <why>]` back to ChatGPT.
-2. **Throughout day**: user message arrives → paste into their ChatGPT session. Photos as `[תמונה: <short description>]`. Review bot response, send, confirm `[נשלח: ...]` if edited.
+2. **Throughout day**: user message arrives → paste into their ChatGPT session. Photos: paste the image directly (the bot sees it). Review response, send, confirm `[נשלח: ...]` if edited.
 3. **Evening** (per user's chosen time): `[שליחה: צ'ק-אין ערב]` → review → send.
 4. **24h silence**: one-time `[שליחה: אישור שתיקה]`. No further nudges regardless.
 5. **End of day**: update [tracker.md](tracker.md); log anything notable in [notes.md](notes.md).
@@ -29,7 +29,7 @@ Manual simulation: operator + ChatGPT behind the scenes, one dedicated ChatGPT s
 2. Open **new** ChatGPT conversation → paste the chosen prompt
 3. ChatGPT replies `מוכן` → ready
 4. Send M1 from [onboarding.md](onboarding.md) to the participant via WhatsApp
-5. When they reply, paste their reply into their ChatGPT session
+5. When they reply, paste their reply into their ChatGPT session (image messages: paste the image directly)
 6. Bot generates the next onboarding question
 7. Continue until all user-info fields are filled; at that point bot says "מעולה, הבנתי. מתחילים מחר בבוקר ב-..."
 8. Add to [tracker.md](tracker.md) with their details
