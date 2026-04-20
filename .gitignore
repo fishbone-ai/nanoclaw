@@ -16,9 +16,8 @@ groups/*
 groups/main/*
 !groups/main/CLAUDE.md
 
-# Track everything under groups/global except live runtime state
+# Track everything under groups/global
 !groups/global/**
-groups/global/memory/heartbeat-state.json
 
 # Secrets
 *.keys.json

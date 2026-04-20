@@ -203,3 +203,7 @@ Available skills in `/workspace/global/skills/`:
 | Skill | File | When to use |
 |-------|------|-------------|
 | meeting-processor | `skills/meeting-processor/SKILL.md` | Analyze a meeting transcript, post summary to #meeting-summaries, suggest Linear issues |
+| linear | `skills/linear/SKILL.md` | Query or manage Linear issues, projects, team workflows; daily standup summaries |
+| venture-evaluation | `skills/venture-evaluation/SKILL.md` | Evaluate a venture idea against the Fishbone rubric (quick filter + scored research) |
+| daily-standup | `skills/daily-standup/SKILL.md` | Post weekday async standup check-ins to Slack (scheduled task — runs `standup.sh`) |
+| meeting-transcriber | `skills/meeting-transcriber/SKILL.md` | Poll Drive for new Meet recordings and transcribe via Gemini (scheduled task — runs `transcribe.py`) |
