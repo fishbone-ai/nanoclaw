@@ -1,0 +1,630 @@
+{
+  "event": "Israeli Retail Con 2025 (Airmeet) - Chat Log",
+  "total_messages": 78,
+  "messages": [
+    {
+      "name": "Adam Jackson",
+      "role": "host",
+      "designation": "Admin",
+      "company": "RETHINK Retail",
+      "timestamp": "an hour ago",
+      "message": "Welcome everyone we will begin shortly!"
+    },
+    {
+      "name": "Yael Kochman",
+      "role": "speaker",
+      "designation": "Founder and CEO",
+      "company": "Re:Tech",
+      "timestamp": "an hour ago",
+      "message": "Hi everyone!"
+    },
+    {
+      "name": "Dmitry Kunyashev",
+      "role": null,
+      "designation": "Innovation manager",
+      "company": "Ex-Lenta",
+      "timestamp": "an hour ago",
+      "message": "Hi! Happy to join!"
+    },
+    {
+      "name": "DeAnn Campbell",
+      "role": null,
+      "designation": "Chief Strategy Officer",
+      "company": "Storewyse, topretailexperts",
+      "timestamp": "an hour ago",
+      "message": "Hi Yael!!"
+    },
+    {
+      "name": "Daniel King",
+      "role": null,
+      "designation": "Director",
+      "company": "Selectika",
+      "timestamp": "an hour ago",
+      "message": "Hi and Shalom"
+    },
+    {
+      "name": "RETHINK Admin (Shahar)",
+      "role": "host",
+      "designation": "Project Management",
+      "company": "RETHINK Retail",
+      "timestamp": "an hour ago",
+      "message": "Hello from Israel!"
+    },
+    {
+      "name": "Chris Smith",
+      "role": null,
+      "designation": "VP of Sales",
+      "company": "Oriient",
+      "timestamp": "an hour ago",
+      "message": "Hi Yael!!"
+    },
+    {
+      "name": "Elaine Barsoom",
+      "role": null,
+      "designation": "Venture Partner",
+      "company": "Silicon Foundry, Silicon Foundry",
+      "timestamp": "an hour ago",
+      "message": "Hi everyone!"
+    },
+    {
+      "name": "Dan Révah",
+      "role": null,
+      "designation": "Global Head of Presales",
+      "company": "Shopic Technologies Ltd.",
+      "timestamp": "an hour ago",
+      "message": "Hello Yael!"
+    },
+    {
+      "name": "DeAnn Campbell",
+      "role": null,
+      "designation": "Chief Strategy Officer",
+      "company": "Storewyse, topretailexperts",
+      "timestamp": "an hour ago",
+      "message": "Hello everyone from Atlanta, GA"
+    },
+    {
+      "name": "Yaniv Zukerman",
+      "role": null,
+      "designation": "CMO",
+      "company": "Cust2MAte",
+      "timestamp": "an hour ago",
+      "message": "Hi ALL"
+    },
+    {
+      "name": "Sagi Eckhaus",
+      "role": null,
+      "designation": "Co-Founder & CEO iCape",
+      "company": "iCape.io",
+      "timestamp": "an hour ago",
+      "message": "NoMatterWhat!"
+    },
+    {
+      "name": "David Polinchock",
+      "role": null,
+      "designation": "Co-Founder/President",
+      "company": "Brand Experience Lab",
+      "timestamp": "an hour ago",
+      "message": "Hello from NJ! Toasting for St. Patrick's Day if anyone wants to join me!"
+    },
+    {
+      "name": "Eldad Rothman",
+      "role": null,
+      "designation": "Co-Founder",
+      "company": "GlassesUSA.com",
+      "timestamp": "an hour ago",
+      "message": "Hi"
+    },
+    {
+      "name": "‪Eran Wolf‬‏",
+      "role": null,
+      "designation": "Mentor and Coacher",
+      "company": "WOLF",
+      "timestamp": "an hour ago",
+      "message": "Hellow from Israel"
+    },
+    {
+      "name": "Nuno Miller",
+      "role": null,
+      "designation": "COO",
+      "company": "Former N Brown",
+      "timestamp": "an hour ago",
+      "message": "Hi"
+    },
+    {
+      "name": "Yves FREY",
+      "role": null,
+      "designation": "Managing Director",
+      "company": "Yves frey Diamonds ltd",
+      "timestamp": "an hour ago",
+      "message": "Hi from London"
+    },
+    {
+      "name": "Brandon Rael",
+      "role": null,
+      "designation": "Consult Partner",
+      "company": "Kyndryl",
+      "timestamp": "an hour ago",
+      "message": "Hello from NY"
+    },
+    {
+      "name": "Yael Weiss",
+      "role": null,
+      "designation": "Lead Partner Solutions Engineer",
+      "company": "Shopify",
+      "timestamp": "an hour ago",
+      "message": "Hi from London :)"
+    },
+    {
+      "name": "Daniel King",
+      "role": null,
+      "designation": "Director",
+      "company": "Selectika",
+      "timestamp": "an hour ago",
+      "message": "Love the resilience!"
+    },
+    {
+      "name": "Brandon Rael",
+      "role": null,
+      "designation": "Consult Partner",
+      "company": "Kyndryl",
+      "timestamp": "an hour ago",
+      "message": "Stay safe and resilient"
+    },
+    {
+      "name": "Houssem Haoua",
+      "role": null,
+      "designation": "CEO",
+      "company": "VisShop AI",
+      "timestamp": "an hour ago",
+      "message": "hi"
+    },
+    {
+      "name": "Todd S Porter",
+      "role": null,
+      "designation": "President / Recruiter",
+      "company": "H.T. PROF Search",
+      "timestamp": "an hour ago",
+      "message": "Hello from North Carolina"
+    },
+    {
+      "name": "Barney Stacher",
+      "role": null,
+      "designation": "CCO",
+      "company": "Transactional Conversations",
+      "timestamp": "an hour ago",
+      "message": "Bring it all to the US!"
+    },
+    {
+      "name": "Yiannis Stamoulis",
+      "role": null,
+      "designation": "CEO",
+      "company": "mobiplus",
+      "timestamp": "an hour ago",
+      "message": "hello from athens"
+    },
+    {
+      "name": "Daniel Manzela",
+      "role": null,
+      "designation": "CEO",
+      "company": "The Next Generation Shopper LTD",
+      "timestamp": "an hour ago",
+      "message": "👋"
+    },
+    {
+      "name": "Matthieu Jolly",
+      "role": null,
+      "designation": "conector",
+      "company": "Seenapse",
+      "timestamp": "an hour ago",
+      "message": "Are you gonna send the report to us?,"
+    },
+    {
+      "name": "marco zanardi",
+      "role": null,
+      "designation": "partner",
+      "company": "Beready",
+      "timestamp": "an hour ago",
+      "message": "Hello from Italy😀"
+    },
+    {
+      "name": "David Polinchock",
+      "role": null,
+      "designation": "Co-Founder/President",
+      "company": "Brand Experience Lab",
+      "timestamp": "an hour ago",
+      "message": "We'll get a copy of this presentation, right? Amit Corney speaker Re:Tech"
+    },
+    {
+      "name": "",
+      "role": null,
+      "designation": null,
+      "company": null,
+      "timestamp": "an hour ago",
+      "message": "Get your copy of the full 2025/26 Israeli Retail Tech Report here: https://lp.re-tech.io/2026-retail-tech-report 📊"
+    },
+    {
+      "name": "Vijay Prakash Rai",
+      "role": null,
+      "designation": "Head -Partner Growth",
+      "company": "Ufinity Ventures Pvt Ltd",
+      "timestamp": "an hour ago",
+      "message": "Hello every one"
+    },
+    {
+      "name": "Dmitry Balakirev",
+      "role": null,
+      "designation": "Publisher",
+      "company": "Malls.com",
+      "timestamp": "an hour ago",
+      "message": "Hi Yael, excited to see Israeli retail tech getting a dedicated report."
+    },
+    {
+      "name": "Ratnesh Chaurasia",
+      "role": null,
+      "designation": "rsm",
+      "company": "zebra technologies",
+      "timestamp": "an hour ago",
+      "message": "Hi Everyone from India!! Amit Corney speaker Re:Tech"
+    },
+    {
+      "name": "",
+      "role": null,
+      "designation": null,
+      "company": null,
+      "timestamp": "44 minutes ago",
+      "message": "Have questions for our panel? Drop them here in the chat and we’ll address them during the Q&A session! 🎤"
+    },
+    {
+      "name": "Shridhar Shanbhag",
+      "role": null,
+      "designation": "pre sales Engineering manager",
+      "company": "Zebra Technologies Inida Pvt. Ltd.",
+      "timestamp": "41 minutes ago",
+      "message": "Hello All"
+    },
+    {
+      "name": "Shlomit Rogel",
+      "role": null,
+      "designation": "VP Business Development",
+      "company": "Global Bridge",
+      "timestamp": "41 minutes ago",
+      "message": "HI all :-)"
+    },
+    {
+      "name": "Daniel King",
+      "role": null,
+      "designation": "Director",
+      "company": "Selectika",
+      "timestamp": "39 minutes ago",
+      "message": "Question for the panel: Are you seeing exits based on ebitda multiple or on a strategic play/integration?"
+    },
+    {
+      "name": "Yash Rathore",
+      "role": null,
+      "designation": "Founder",
+      "company": "RnR Retail",
+      "timestamp": "35 minutes ago",
+      "message": "Panel:  In coming years, is traditional/offline retail will go down or there will be rise in Quick commerce, online retail leading to close the offline stores?"
+    },
+    {
+      "name": "Carlos Benaim",
+      "role": null,
+      "designation": "CEO",
+      "company": "Deep Learning Robotics DLRob",
+      "timestamp": "34 minutes ago",
+      "message": "Hello everyone"
+    },
+    {
+      "name": "Rebecca Barel",
+      "role": null,
+      "designation": "Marketing Director",
+      "company": "CaPow (capow.energy)",
+      "timestamp": "33 minutes ago",
+      "message": "As automation scales in retail and fulfillment, what’s the least discussed bottleneck you’re seeing today that could limit growth over the next 3-5 years? Amit Corney speaker Re:Tech"
+    },
+    {
+      "name": "",
+      "role": null,
+      "designation": null,
+      "company": null,
+      "timestamp": "33 minutes ago",
+      "message": "Great to have our partners from Moonshot on the panel! Learn more about their work and impact here: https://moonshot-ai.com/ 🚀"
+    },
+    {
+      "name": "Daniel King",
+      "role": null,
+      "designation": "Director",
+      "company": "Selectika",
+      "timestamp": "30 minutes ago",
+      "message": "Another question for the panel: VC's are now looking at investments through the lens of 1. Does AI enable this? 2. Does AI canabalise this?  Where does the panel think AI canabalisation will take  place across retail tech?"
+    },
+    {
+      "name": "Dmitry Balakirev",
+      "role": null,
+      "designation": "Publisher",
+      "company": "Malls.com",
+      "timestamp": "28 minutes ago",
+      "message": "Retail tech funding went to consumer-facing apps for a decade. Is the next wave going to the infrastructure layer? The tech that finally makes physical retail as measurable as digital?"
+    },
+    {
+      "name": "Rebecca Barel",
+      "role": null,
+      "designation": "Marketing Director",
+      "company": "CaPow (capow.energy)",
+      "timestamp": "25 minutes ago",
+      "message": "yes"
+    },
+    {
+      "name": "Martin H. H. Sabag",
+      "role": null,
+      "designation": "VP Business Development",
+      "company": "EXpanio",
+      "timestamp": "21 minutes ago",
+      "message": "What will happen when the AI Agents (ChatGPT, Clause, Gemini etc.) will own the top of the funnel (discovery to purchase and payment) and consumers will not reach to the e-commerce website, very much like Booking/Expedia and others did to hetels?"
+    },
+    {
+      "name": "Daniel King",
+      "role": null,
+      "designation": "Director",
+      "company": "Selectika",
+      "timestamp": "20 minutes ago",
+      "message": "Well said Dovi! Amit Corney speaker Re:Tech"
+    },
+    {
+      "name": "",
+      "role": null,
+      "designation": null,
+      "company": null,
+      "timestamp": "16 minutes ago",
+      "message": "Stay connected! Join the Re:Tech community to keep up with the latest in the ecosystem: FB group- https://www.facebook.com/groups/commtechil ,  whatsapp group- https://a0d1f08a.streaklinks.com/CzteYF1w8A7LJ48-mASZOMuB/https%3A%2F%2Fchat.whatsapp.com%"
+    },
+    {
+      "name": "Rebecca Barel",
+      "role": null,
+      "designation": "Marketing Director",
+      "company": "CaPow (capow.energy)",
+      "timestamp": "15 minutes ago",
+      "message": "Dovi, in fulfillment environments, how do you distinguish between innovation that looks promising in pilots - and innovation that actually scales and delivers measurable ROI?"
+    },
+    {
+      "name": "David Polinchock",
+      "role": null,
+      "designation": "Co-Founder/President",
+      "company": "Brand Experience Lab",
+      "timestamp": "15 minutes ago",
+      "message": "Getting an error message on the WhatsApp link Amit Corney Stay connected! Join the Re:Tech community to keep up with the latest in the ecosystem: FB group- https://www.facebook.com/groups/commtechil ,  whatsapp group- https://a0d1f08a.streaklinks.com/CzteYF1w8A7LJ48-mASZOMuB/https%3A%2F%2Fchat.whatsapp.com% Avigail Steinberg 13 minutes ago absolutely agree)"
+    },
+    {
+      "name": "Rachel ten Brink",
+      "role": null,
+      "designation": "GP",
+      "company": "Red Bike Capital",
+      "timestamp": "13 minutes ago",
+      "message": "Excellent point on Agentic commerce? Will it be the next wave or a blip?"
+    },
+    {
+      "name": "Daniel King",
+      "role": null,
+      "designation": "Director",
+      "company": "Selectika",
+      "timestamp": "12 minutes ago",
+      "message": "I'm with Aviv on that"
+    },
+    {
+      "name": "Martin H. H. Sabag",
+      "role": null,
+      "designation": "VP Business Development",
+      "company": "EXpanio",
+      "timestamp": "12 minutes ago",
+      "message": "It will! the Ai Agent will do the ultimate personalisation"
+    },
+    {
+      "name": "Yael Weiss",
+      "role": null,
+      "designation": "Lead Partner Solutions Engineer",
+      "company": "Shopify",
+      "timestamp": "11 minutes ago",
+      "message": "Agentic commerce has so many layers to it"
+    },
+    {
+      "name": "Yash Rathore",
+      "role": null,
+      "designation": "Founder",
+      "company": "RnR Retail",
+      "timestamp": "11 minutes ago",
+      "message": "Yes, the whatsapp link seems to be broken David Polinchock Getting an error message on the WhatsApp link"
+    },
+    {
+      "name": "Rebecca Barel",
+      "role": null,
+      "designation": "Marketing Director",
+      "company": "CaPow (capow.energy)",
+      "timestamp": "11 minutes ago",
+      "message": ""
+    },
+    {
+      "name": "please share again the WhatsApp link",
+      "role": null,
+      "designation": "CoS",
+      "company": "Rockpost Capital",
+      "timestamp": "11 minutes ago",
+      "message": "Absolutely agree Dovi! Very well said!"
+    },
+    {
+      "name": "David Polinchock",
+      "role": null,
+      "designation": "Co-Founder/President",
+      "company": "Brand Experience Lab",
+      "timestamp": "10 minutes ago",
+      "message": "Loved it, thanks Yael!"
+    },
+    {
+      "name": "Dmitry Balakirev",
+      "role": null,
+      "designation": "Publisher",
+      "company": "Malls.com",
+      "timestamp": "10 minutes ago",
+      "message": "Thank you, guys! Amit Corney speaker Re:Tech"
+    },
+    {
+      "name": "",
+      "role": null,
+      "designation": null,
+      "company": null,
+      "timestamp": "10 minutes ago",
+      "message": "Learn more about the company pitching right now- Metriko: https://metriko.ai/ ✨"
+    },
+    {
+      "name": "Brandon Rael",
+      "role": null,
+      "designation": "Consult Partner",
+      "company": "Kyndryl",
+      "timestamp": "9 minutes ago",
+      "message": "Agentic and Conversational commerce are among the most innovative solutions. However, scalability and commercial viability, while mitigating operational risks, are major challenges."
+    },
+    {
+      "name": "Jennifer Chaffee",
+      "role": null,
+      "designation": "Sr. Director",
+      "company": "Insite.ai",
+      "timestamp": "9 minutes ago",
+      "message": "Can hear  you"
+    },
+    {
+      "name": "Brandon Rael",
+      "role": null,
+      "designation": "Consult Partner",
+      "company": "Kyndryl",
+      "timestamp": "8 minutes ago",
+      "message": "However, there are significant dependencies on having a robust and scalable infrastructure, an optimized supply chain and agile system capabilities to make this work, and economically viable"
+    },
+    {
+      "name": "Daniel King",
+      "role": null,
+      "designation": "Director",
+      "company": "Selectika",
+      "timestamp": "7 minutes ago",
+      "message": "yes!"
+    },
+    {
+      "name": "Rebecca Barel",
+      "role": null,
+      "designation": "Marketing Director",
+      "company": "CaPow (capow.energy)",
+      "timestamp": "7 minutes ago",
+      "message": "yes"
+    },
+    {
+      "name": "Yaniv Zukerman",
+      "role": null,
+      "designation": "CMO",
+      "company": "Cust2MAte",
+      "timestamp": "7 minutes ago",
+      "message": "yes we can"
+    },
+    {
+      "name": "Ronen Michaeli",
+      "role": "speaker",
+      "designation": "CTO",
+      "company": "Metriko",
+      "timestamp": "7 minutes ago",
+      "message": "yes"
+    },
+    {
+      "name": "Yael Kochman",
+      "role": "speaker",
+      "designation": "Founder and CEO",
+      "company": "Re:Tech",
+      "timestamp": "7 minutes ago",
+      "message": "yes"
+    },
+    {
+      "name": "Martin H. H. Sabag",
+      "role": null,
+      "designation": "VP Business Development",
+      "company": "EXpanio",
+      "timestamp": "7 minutes ago",
+      "message": "yes Amit Corney speaker Re:Tech"
+    },
+    {
+      "name": "",
+      "role": null,
+      "designation": null,
+      "company": null,
+      "timestamp": "6 minutes ago",
+      "message": "Learn more about the company pitching right now- Algoretail: https://www.algoretail.io/ ✨"
+    },
+    {
+      "name": "David K",
+      "role": null,
+      "designation": "Group managing director",
+      "company": "Ibtech international",
+      "timestamp": "6 minutes ago",
+      "message": "Yes we caan"
+    },
+    {
+      "name": "Jennifer Chaffee",
+      "role": null,
+      "designation": "Sr. Director",
+      "company": "Insite.ai",
+      "timestamp": "6 minutes ago",
+      "message": "Yes"
+    },
+    {
+      "name": "Nathan Svirsky",
+      "role": null,
+      "designation": "Enterprise Account Executive",
+      "company": "Cymbio/PayPal",
+      "timestamp": "6 minutes ago",
+      "message": "Yea Amit Corney speaker Re:Tech"
+    },
+    {
+      "name": "",
+      "role": null,
+      "designation": null,
+      "company": null,
+      "timestamp": "5 minutes ago",
+      "message": "Join the Re:Tech community whatsapp group- https://chat.whatsapp.com/CKWg96bWzfkATISMjUtmKV"
+    },
+    {
+      "name": "Sagi Eckhaus",
+      "role": null,
+      "designation": "Co-Founder & CEO iCape",
+      "company": "iCape.io",
+      "timestamp": "4 minutes ago",
+      "message": "You are doing great Job at AlgoRetail! Keep on rocking! Amit Corney speaker Re:Tech"
+    },
+    {
+      "name": "",
+      "role": null,
+      "designation": null,
+      "company": null,
+      "timestamp": "3 minutes ago",
+      "message": "Learn more about the company pitching right now- howazit: https://www.howazit.com/ ✨ Learn more about the company pitching right now- saywhatt: https://saywhatt.com/ ✨ Stick around after the pitches! We have a dedicated networking session starting shortly - you don’t want to miss it. 🤝"
+    },
+    {
+      "name": "Rebecca Barel",
+      "role": null,
+      "designation": "Marketing Director",
+      "company": "CaPow (capow.energy)",
+      "timestamp": "2 minutes ago",
+      "message": "nice!"
+    },
+    {
+      "name": "Dmitry Balakirev",
+      "role": null,
+      "designation": "Publisher",
+      "company": "Malls.com",
+      "timestamp": "a minute ago",
+      "message": "The shift from customer service bot to actual sales system is the right framing. Most AI retail tools are still solving the wrong problem. Amit Corney speaker Re:Tech"
+    },
+    {
+      "name": "",
+      "role": null,
+      "designation": null,
+      "company": null,
+      "timestamp": "just now",
+      "message": "Learn more about the company pitching right now- SHOPPER AI: https://shopperai.ai/ ✨"
+    }
+  ]
+}
