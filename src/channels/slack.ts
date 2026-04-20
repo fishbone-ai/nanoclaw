@@ -95,18 +95,12 @@ export class SlackChannel implements Channel {
       // Always report metadata for group discovery
       this.opts.onChatMetadata(jid, timestamp, undefined, 'slack', isGroup);
 
-      // Auto-register unknown chats on first interaction:
-      //   - DMs: any message (they're inherently 1:1 with the bot).
-      //   - Channels/groups: only when the bot is @-mentioned, so random
-      //     workspace members can't accidentally onboard the bot by posting.
+      // Auto-register any channel or DM on first interaction.
+      // requiresTrigger handles response filtering, so we register eagerly.
       let groups = this.opts.registeredGroups();
       if (!groups[jid] && this.opts.registerGroup) {
-        const isMentioned =
-          !!this.botUserId && msg.text.includes(`<@${this.botUserId}>`);
-        if (!isGroup || isMentioned) {
-          await this.autoRegister(jid, msg.channel, isGroup);
-          groups = this.opts.registeredGroups();
-        }
+        await this.autoRegister(jid, msg.channel, isGroup);
+        groups = this.opts.registeredGroups();
       }
       if (!groups[jid]) return;
 
@@ -129,48 +123,76 @@ export class SlackChannel implements Channel {
           'unknown';
       }
 
-      // Translate Slack <@UBOTID> mentions into TRIGGER_PATTERN format.
-      // Slack encodes @mentions as <@U12345>, which won't match TRIGGER_PATTERN
-      // (e.g., ^@<ASSISTANT_NAME>\b), so we prepend the trigger when the bot is @mentioned.
-      let content = msg.text;
-      if (this.botUserId && !isBotMessage) {
-        const mentionPattern = `<@${this.botUserId}>`;
-        if (
-          content.includes(mentionPattern) &&
-          !TRIGGER_PATTERN.test(content)
-        ) {
-          content = `@${ASSISTANT_NAME} ${content}`;
-        }
-      }
+      const isMentioned =
+        !!this.botUserId &&
+        !isBotMessage &&
+        msg.text.includes(`<@${this.botUserId}>`);
 
-      // For thread replies, fetch the parent message so the agent has context
-      // of what's being replied to (e.g. Ohav replying to the bot's task check).
+      // For thread replies, fetch full thread so the agent has context and
+      // we can determine whether the bot is already part of the conversation.
       const threadTs = (msg as { thread_ts?: string }).thread_ts;
       const isThreadReply = !isBotMessage && threadTs && threadTs !== msg.ts;
       let replyToContent: string | undefined;
       let replyToSenderName: string | undefined;
+      let botIsInThread = false;
       if (isThreadReply) {
         try {
           const replies = await this.app.client.conversations.replies({
             channel: msg.channel,
             ts: threadTs,
-            limit: 1,
             inclusive: true,
+            limit: 100,
           });
-          const parent = replies.messages?.[0];
+          const messages = replies.messages || [];
+          const parent = messages[0];
           if (parent?.text) {
-            replyToContent = parent.text;
             replyToSenderName = parent.bot_id
               ? ASSISTANT_NAME
               : parent.user
                 ? ((await this.resolveUserName(parent.user)) ?? parent.user)
                 : ASSISTANT_NAME;
+
+            // Build full thread context: root + all prior replies (excluding current msg)
+            const priorMessages = messages.filter((m) => m.ts !== msg.ts);
+            if (priorMessages.length > 1) {
+              const lines = await Promise.all(
+                priorMessages.map(async (m) => {
+                  const who = m.bot_id
+                    ? ASSISTANT_NAME
+                    : m.user
+                      ? ((await this.resolveUserName(m.user)) ?? m.user)
+                      : 'unknown';
+                  return `${who}: ${m.text || ''}`;
+                }),
+              );
+              replyToContent = lines.join('\n');
+            } else {
+              replyToContent = parent.text;
+            }
           }
+          // Bot is "in thread" if any message in the thread is from the bot
+          botIsInThread = messages.some(
+            (m) => m.ts !== msg.ts && (m.bot_id || m.user === this.botUserId),
+          );
         } catch (err) {
           logger.debug(
             { err, threadTs },
             'Slack: failed to fetch thread parent',
           );
+        }
+      }
+
+      // Prepend trigger prefix when the bot should respond:
+      //   - DMs: always (inherently 1-on-1)
+      //   - Channels: @mention, or thread reply where bot already participated
+      // Without the prefix, requiresTrigger=true on channel groups will
+      // suppress agent invocation while still storing the message for context.
+      let content = msg.text;
+      if (!isBotMessage) {
+        const shouldTrigger =
+          !isGroup || isMentioned || (isThreadReply && botIsInThread);
+        if (shouldTrigger && !TRIGGER_PATTERN.test(content)) {
+          content = `@${ASSISTANT_NAME} ${content}`;
         }
       }
 
@@ -232,8 +254,11 @@ export class SlackChannel implements Channel {
       return;
     }
 
+    // replyThreadTs maps msg.ts → thread root. When empty (e.g. after restart),
+    // fall back to using replyToMessageId directly as thread_ts — callers
+    // now pass the DB's reply_to_message_id which IS the thread root.
     const threadTs = replyToMessageId
-      ? this.replyThreadTs.get(replyToMessageId)
+      ? (this.replyThreadTs.get(replyToMessageId) ?? replyToMessageId)
       : undefined;
     try {
       // Slack limits messages to ~4000 characters; split if needed.
@@ -382,7 +407,7 @@ export class SlackChannel implements Channel {
       folder,
       trigger,
       added_at: new Date().toISOString(),
-      requiresTrigger: isGroup && !isMain,
+      requiresTrigger: isGroup, // channels require trigger; DMs don't
       isMain,
     });
   }

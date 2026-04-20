@@ -404,6 +404,22 @@ export function getLastBotMessageTimestamp(
   return row?.ts ?? undefined;
 }
 
+export function getLastUserMessageThreadRoot(
+  chatJid: string,
+): string | undefined {
+  const row = db
+    .prepare(
+      `SELECT id, reply_to_message_id FROM messages
+       WHERE chat_jid = ? AND is_from_me = 0 AND is_bot_message = 0
+       ORDER BY timestamp DESC LIMIT 1`,
+    )
+    .get(chatJid) as
+    | { id: string; reply_to_message_id: string | null }
+    | undefined;
+  if (!row) return undefined;
+  return row.reply_to_message_id ?? row.id;
+}
+
 export function createTask(
   task: Omit<ScheduledTask, 'last_run' | 'last_result'>,
 ): void {

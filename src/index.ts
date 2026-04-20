@@ -41,6 +41,7 @@ import {
   getRouterState,
   initDatabase,
   setRegisteredGroup,
+  getLastUserMessageThreadRoot,
   setRouterState,
   setSession,
   storeChatMetadata,
@@ -215,8 +216,8 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
 
   if (missedMessages.length === 0) return true;
 
-  // For non-main groups, check if trigger is required and present
-  if (!isMainGroup && group.requiresTrigger !== false) {
+  // Check if trigger is required and present
+  if (group.requiresTrigger !== false) {
     const triggerPattern = getTriggerPattern(group.trigger);
     const allowlistCfg = loadSenderAllowlist();
     const hasTrigger = missedMessages.some(
@@ -255,7 +256,8 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
     }, IDLE_TIMEOUT);
   };
 
-  const triggerMessageId = missedMessages[missedMessages.length - 1].id;
+  const lastMessage = missedMessages[missedMessages.length - 1];
+  const triggerMessageId = lastMessage.reply_to_message_id || lastMessage.id;
   await channel.setTyping?.(chatJid, true, triggerMessageId);
   let hadError = false;
   let outputSentToUser = false;
@@ -469,7 +471,7 @@ async function startMessageLoop(): Promise<void> {
           }
 
           const isMainGroup = group.isMain === true;
-          const needsTrigger = !isMainGroup && group.requiresTrigger !== false;
+          const needsTrigger = group.requiresTrigger !== false;
 
           // For non-main groups, only act on trigger messages.
           // Non-trigger messages accumulate in DB and get pulled as
@@ -702,11 +704,12 @@ async function main(): Promise<void> {
     },
   });
   startIpcWatcher({
-    sendMessage: (jid, text) => {
+    sendMessage: (jid, text, replyToMessageId) => {
       const channel = findChannel(channels, jid);
       if (!channel) throw new Error(`No channel for JID: ${jid}`);
-      return channel.sendMessage(jid, text);
+      return channel.sendMessage(jid, text, replyToMessageId);
     },
+    getLastUserMessageThreadRoot,
     registeredGroups: () => registeredGroups,
     registerGroup,
     syncGroups: async (force: boolean) => {
