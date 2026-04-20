@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Visibility Initiative - Knots Studio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 52px 52px 48px;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #ee3825;
+    margin-bottom: 36px;
+  }
+
+  .logo-area {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .logo-text {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ee3825;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-tagline {
+    font-size: 9.5px;
+    font-weight: 500;
+    color: #aaa;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .doc-meta {
+    text-align: right;
+  }
+
+  .doc-meta-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #ccc;
+    margin-bottom: 4px;
+  }
+
+  .doc-meta-value {
+    font-size: 11px;
+    color: #777;
+    line-height: 1.7;
+  }
+
+  /* Hero */
+  .hero {
+    margin-bottom: 40px;
+  }
+
+  .hero-eyebrow {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #ee3825;
+    margin-bottom: 10px;
+  }
+
+  .hero-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #111;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+
+  .hero-body {
+    font-size: 13.5px;
+    color: #555;
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .section-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #ee3825;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 12px;
+  }
+
+  p {
+    color: #444;
+    font-size: 13px;
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 12.5px;
+  }
+
+  thead tr {
+    background: #ee3825;
+    color: #fff;
+  }
+
+  thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  tbody tr:nth-child(even) {
+    background: #fafafa;
+  }
+
+  tbody td {
+    padding: 10px 14px;
+    vertical-align: top;
+    color: #444;
+    line-height: 1.5;
+  }
+
+  tbody td:first-child {
+    font-weight: 600;
+    color: #222;
+    white-space: nowrap;
+  }
+
+  /* Highlight box */
+  .highlight-box {
+    background: #fff5f4;
+    border-left: 4px solid #ee3825;
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+
+  .highlight-box p {
+    margin: 0;
+    color: #333;
+    font-size: 13px;
+  }
+
+  /* Timeline */
+  .timeline {
+    margin: 16px 0;
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .timeline-item:last-child {
+    border-bottom: none;
+  }
+
+  .timeline-date {
+    font-size: 11px;
+    font-weight: 600;
+    color: #ee3825;
+    white-space: nowrap;
+    min-width: 100px;
+    padding-top: 2px;
+  }
+
+  .timeline-desc {
+    font-size: 13px;
+    color: #444;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-brand {
+    font-size: 10px;
+    font-weight: 600;
+    color: #ee3825;
+    letter-spacing: 0.5px;
+  }
+
+  .footer-contact {
+    font-size: 10px;
+    color: #999;
+    text-align: right;
+    line-height: 1.7;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 28px 0;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-area">
+      <div class="logo-text">Fishbone</div>
+      <div class="logo-tagline">AI Visibility for Ecommerce</div>
+    </div>
+    <div class="doc-meta">
+      <div class="doc-meta-label">Pilot Brief</div>
+      <div class="doc-meta-value">
+        Knots Studio<br>
+        April 4, 2026
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">Initiative Overview</div>
+    <div class="hero-title">AI Visibility Initiative</div>
+    <p class="hero-body">
+      Shoppers increasingly start their search in AI assistants rather than traditional search engines.
+      When someone asks "what's a good gift for a home decor lover under £100?", AI systems surface
+      products based on the quality and completeness of their catalog data - attributes like color,
+      material, product type, and structured descriptions.
+    </p>
+    <p class="hero-body">
+      This initiative is about understanding what moves the needle for Knots Studio specifically,
+      and doing it in a way we can measure clearly.
+    </p>
+  </div>
+
+  <!-- Baseline -->
+  <div class="section">
+    <div class="section-label">Baseline Assessment</div>
+    <div class="section-title">Where Things Stand Today</div>
+    <p>We pulled your full Google Merchant Center catalog on April 1, 2026. Here's what we found across the fields AI systems use to match products to queries:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Color</td>
+          <td>Not populated for most products; where present, values contain SKU codes rather than color names</td>
+        </tr>
+        <tr>
+          <td>Product type</td>
+          <td>Not populated for most products</td>
+        </tr>
+        <tr>
+          <td>Structured attributes</td>
+          <td>Material, dimensions, and similar fields not populated</td>
+        </tr>
+        <tr>
+          <td>Brand</td>
+          <td>Inconsistent formatting across products</td>
+        </tr>
+        <tr>
+          <td>Product highlights</td>
+          <td>Not set</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- What we're doing -->
+  <div class="section">
+    <div class="section-label">The Work</div>
+    <div class="section-title">What We're Doing</div>
+
+    <p>We've selected 38 products for this initiative. For each, we're enriching the key attributes Google uses for AI matching - color, product type, brand, structured taxonomy fields, descriptions, and product highlights.</p>
+
+    <div class="highlight-box">
+      <p>Changes are made directly in Shopify, which syncs to Google Merchant Center automatically. Prices, inventory, storefront, and campaign settings are untouched.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Timeline -->
+  <div class="section">
+    <div class="section-label">Timeline</div>
+    <div class="section-title">What Happens Next</div>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-date">April 4, 2026</div>
+        <div class="timeline-desc">Brief shared. Enrichment begins on selected products.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Week 1 check</div>
+        <div class="timeline-desc">Confirm Google Merchant Center has picked up all changes.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Coming weeks</div>
+        <div class="timeline-desc">We expect to have insights within a few weeks and will share what we learn with you.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-brand">Fishbone — getfishbone.ai</div>
+    <div class="footer-contact">
+      Ohav Peri · ohav@getfishbone.ai<br>
+      Avishay · avishay@getfishbone.ai
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

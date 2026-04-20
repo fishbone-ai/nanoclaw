@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Visibility Initiative - DAFNI Hair</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 52px 52px 48px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #ee3825;
+    margin-bottom: 36px;
+  }
+
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-img {
+    height: 32px;
+    width: auto;
+  }
+
+  .logo-tagline {
+    font-size: 9.5px;
+    font-weight: 500;
+    color: #aaa;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .doc-meta {
+    text-align: right;
+  }
+
+  .doc-meta-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #ccc;
+    margin-bottom: 4px;
+  }
+
+  .doc-meta-value {
+    font-size: 11px;
+    color: #777;
+    line-height: 1.7;
+  }
+
+  /* Hero */
+  .hero {
+    margin-bottom: 40px;
+  }
+
+  .hero-eyebrow {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #ee3825;
+    margin-bottom: 10px;
+  }
+
+  .hero-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #111;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+
+  .hero-body {
+    font-size: 13.5px;
+    color: #555;
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .section-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #ee3825;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 12px;
+  }
+
+  p {
+    color: #444;
+    font-size: 13px;
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 12.5px;
+  }
+
+  thead tr {
+    background: #ee3825;
+    color: #fff;
+  }
+
+  thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  tbody tr:nth-child(even) {
+    background: #fafafa;
+  }
+
+  tbody td {
+    padding: 10px 14px;
+    vertical-align: top;
+    color: #444;
+    line-height: 1.5;
+  }
+
+  tbody td:first-child {
+    font-weight: 600;
+    color: #222;
+    white-space: nowrap;
+  }
+
+  /* Highlight box */
+  .highlight-box {
+    background: #fff5f4;
+    border-left: 4px solid #ee3825;
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+
+  .highlight-box p {
+    margin: 0;
+    color: #333;
+    font-size: 13px;
+  }
+
+  /* Timeline */
+  .timeline {
+    margin: 16px 0;
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .timeline-item:last-child {
+    border-bottom: none;
+  }
+
+  .timeline-date {
+    font-size: 11px;
+    font-weight: 600;
+    color: #ee3825;
+    white-space: nowrap;
+    min-width: 100px;
+    padding-top: 2px;
+  }
+
+  .timeline-desc {
+    font-size: 13px;
+    color: #444;
+  }
+
+  /* Page break */
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-brand {
+    font-size: 10px;
+    font-weight: 600;
+    color: #ee3825;
+    letter-spacing: 0.5px;
+  }
+
+  .footer-contact {
+    font-size: 10px;
+    color: #999;
+    text-align: right;
+    line-height: 1.7;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 28px 0;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-area">
+      <img class="logo-img" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMTAwIj4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLmNscy0xIHsKICAgICAgICBmaWxsOiAjZWUzODI1OwogICAgICB9CiAgICA8L3N0eWxlPgogIDwvZGVmcz4KICA8Zz4KICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTExMi4wMSw3NS4zNlYyMy4xNWgzMS4wM3Y1Ljc0aC0yNC42OXYxNy44M2gyMS43OHY1Ljc0aC0yMS43OHYyMi45aC02LjM0WiIvPgogICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTQ3LjQ0LDc1LjM2di0zNy4yOWg1Ljk3djM3LjI5aC01Ljk3WiIvPgogICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTczLjcsNzYuMjVjLTIuNzQsMC01LjEyLS40MS03LjE2LTEuMjMtMi4wNC0uODItMy43NC0xLjktNS4xMS0zLjI0LTEuMzctMS4zNC0yLjM1LTIuODEtMi45NS00LjRsNS4yMi0yLjE2Yy44NSwxLjY5LDIuMTEsMy4wNiwzLjgsNC4xLDEuNjksMS4wNCwzLjU1LDEuNTcsNS41OSwxLjU3LDIuMzQsMCw0LjMtLjQ2LDUuODktMS4zOCwxLjU5LS45MiwyLjM5LTIuMjIsMi4zOS0zLjkyLDAtMS41NC0uNTktMi43OC0xLjc1LTMuNzMtMS4xNy0uOTQtMi45LTEuNzItNS4xOC0yLjMxbC0zLjU4LS45N2MtMy4zOC0uOS02LjAyLTIuMjUtNy45MS00LjA2LTEuODktMS44MS0yLjgzLTMuODctMi44My02LjE1LDAtMy41MywxLjE2LTYuMjgsMy40Ny04LjI0LDIuMzEtMS45Niw1Ljc2LTIuOTUsMTAuMzMtMi45NSwyLjE5LDAsNC4xOC4zMiw1Ljk3Ljk3LDEuNzkuNjUsMy4zMywxLjU1LDQuNjIsMi43MiwxLjI5LDEuMTcsMi4yNCwyLjU1LDIuODMsNC4xNGwtNS4yMiwyLjMxYy0uNjUtMS42OS0xLjcyLTIuOTEtMy4yMS0zLjY1cy0zLjMxLTEuMTItNS40NC0xLjEyYy0yLjI5LDAtNC4wOC40OC01LjM3LDEuNDUtMS4yOS45Ny0xLjk0LDIuMzItMS45NCw0LjA2LDAsMSwuNTMsMS45MywxLjYsMi44LDEuMDcuODcsMi42NSwxLjU4LDQuNzQsMi4xM2wzLjczLjk3YzIuNDQuNiw0LjQ4LDEuNDgsNi4xMiwyLjY1LDEuNjQsMS4xNywyLjg4LDIuNSwzLjczLDMuOTkuODUsMS40OSwxLjI3LDMuMDgsMS4yNyw0Ljc3LDAsMi4yNC0uNiw0LjE4LTEuNzksNS44MnMtMi44MSwyLjktNC44NSwzLjc3Yy0yLjA0Ljg3LTQuMzgsMS4zMS03LjAxLDEuMzFaIi8+CiAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xOTEuNjcsNzUuMzZWMjMuMTVoNS45N3YyMC4zNmMxLjI0LTIuMDQsMi44Ni0zLjYsNC44NS00LjcsMS45OS0xLjA5LDQuMy0xLjY0LDYuOTQtMS42NCwyLjg4LDAsNS40Mi41OCw3LjYxLDEuNzUsMi4xOSwxLjE3LDMuODksMy4wMiw1LjExLDUuNTYsMS4yMiwyLjU0LDEuOCw1Ljg3LDEuNzUsOS45OXYyMC44OWgtNS45N3YtMTkuMDljMC0zLjY4LS40NC02LjQ5LTEuMzEtOC40My0uODctMS45NC0yLjA1LTMuMjctMy41NC0zLjk5LTEuNDktLjcyLTMuMTgtMS4wOC01LjA3LTEuMDgtMy4yOCwwLTUuODMsMS4xNi03LjY1LDMuNDctMS44MiwyLjMxLTIuNzIsNS41OC0yLjcyLDkuODF2MTkuMzJoLTUuOTdaIi8+CiAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0yNjIuNzIsNDYuMTJjLTEuNTctMi45NC0zLjc2LTUuMjMtNi41Ny02LjktMi44MS0xLjY3LTYuMDMtMi41LTkuNjYtMi41cy02Ljg2LjgzLTkuNjYsMi41Yy0uNDkuMjktLjk1LjU5LTEuMzkuOTJsLjEtMTdoLTUuOTd2NTIuMjFoNS42OGwuMDItMy4xNmMuNTMuNCwxLjA3Ljc4LDEuNjUsMS4xMSwyLjgxLDEuNjcsNi4wNSwyLjUsOS43MywyLjVzNi43Ni0uODMsOS41NC0yLjVjMi43OS0xLjY3LDQuOTctMy45Nyw2LjUzLTYuOSwxLjU2LTIuOTMsMi4zNC02LjMxLDIuMzQtMTAuMTRzLS43OC03LjIxLTIuMzQtMTAuMTVaTTI1Ny40Miw2My41M2MtMS4wNywyLjEyLTIuNTQsMy43Ny00LjQxLDQuOTctMS44NiwxLjE5LTQuMDIsMS43OS02LjQ1LDEuNzlzLTQuNjEtLjYtNi41My0xLjc5Yy0xLjkxLTEuMi0zLjQxLTIuODUtNC40OC00Ljk3LS4wOS0uMTgtLjE3LS4zNi0uMjUtLjU0LS45MS0xLjk4LTEuMzUtNC4yMi0xLjM1LTYuNzIsMC0yLjYyLjQ4LTQuOTMsMS40My02Ljk0LjA1LS4xMi4xMS0uMjUuMTctLjM3LDEuMDctMi4xLDIuNTQtMy43NCw0LjQxLTQuOTIsMS44Ni0xLjIsNC4wMS0xLjc5LDYuNDUtMS43OXM0LjY3LjU5LDYuNTcsMS43OWMxLjg5LDEuMTksMy4zNywyLjg1LDQuNDQsNC45NiwxLjA2LDIuMTEsMS42LDQuNTQsMS42LDcuMjhzLS41NCw1LjE2LTEuNiw3LjI3WiIvPgogICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMjg2LjEsNzYuMjVjLTMuNjgsMC02LjkyLS44My05LjczLTIuNS0yLjgxLTEuNjctNS4wMS0zLjk3LTYuNi02LjktMS41OS0yLjkzLTIuMzktNi4zMS0yLjM5LTEwLjE0cy43OC03LjIxLDIuMzUtMTAuMTRjMS41Ny0yLjkzLDMuNzUtNS4yMyw2LjU2LTYuOSwyLjgxLTEuNjcsNi4wMy0yLjUsOS42Ni0yLjVzNi44NS44Myw5LjY2LDIuNWMyLjgxLDEuNjcsNSwzLjk3LDYuNTYsNi45LDEuNTcsMi45MywyLjM1LDYuMzIsMi4zNSwxMC4xNHMtLjc4LDcuMjEtMi4zNSwxMC4xNGMtMS41NywyLjkzLTMuNzQsNS4yMy02LjUzLDYuOS0yLjc5LDEuNjctNS45NywyLjUtOS41NSwyLjVaTTI4Ni4wMyw3MC43M2MyLjQ0LDAsNC41OS0uNiw2LjQ1LTEuNzksMS44Ni0xLjE5LDMuMzMtMi44NSw0LjQtNC45NiwxLjA3LTIuMTEsMS42LTQuNTQsMS42LTcuMjdzLS41My01LjE2LTEuNi03LjI3Yy0xLjA3LTIuMTEtMi41NS0zLjc3LTQuNDQtNC45Ni0xLjg5LTEuMTktNC4wOC0xLjc5LTYuNTYtMS43OXMtNC41OS42LTYuNDUsMS43OWMtMS44NiwxLjE5LTMuMzMsMi44My00LjQsNC45Mi0xLjA3LDIuMDktMS42LDQuNTMtMS42LDcuMzFzLjUzLDUuMTYsMS42LDcuMjdjMS4wNywyLjExLDIuNTYsMy43Nyw0LjQ4LDQuOTYsMS45MSwxLjE5LDQuMDksMS43OSw2LjUzLDEuNzlaIi8+CiAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0zMDkuMDgsNzUuMzZ2LTM3LjI5aDUuNTlsLjMsNS41OWMxLjI0LTIuMDksMi44Ni0zLjY5LDQuODUtNC44MSwxLjk5LTEuMTIsNC4zLTEuNjgsNi45NC0xLjY4LDIuOTMsMCw1LjQ4LjU4LDcuNjUsMS43NSwyLjE2LDEuMTcsMy44NSwzLjAyLDUuMDcsNS41NiwxLjIyLDIuNTQsMS44LDUuODcsMS43NSw5Ljk5djIwLjg5aC01Ljk3di0xOS4wOWMwLTMuNjgtLjQyLTYuNDktMS4yNy04LjQzLS44NS0xLjk0LTIuMDEtMy4yNy0zLjUxLTMuOTktMS40OS0uNzItMy4xOC0xLjA4LTUuMDctMS4wOC0zLjI4LDAtNS44MywxLjE2LTcuNjUsMy40Ny0xLjgyLDIuMzEtMi43Miw1LjU4LTIuNzIsOS44MXYxOS4zMmgtNS45N1oiLz4KICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTM2My4zLDc2LjI1Yy0zLjYzLDAtNi44NC0uODMtOS42Mi0yLjUtMi43OC0xLjY3LTQuOTYtMy45Ny02LjUzLTYuOS0xLjU3LTIuOTMtMi4zNS02LjMxLTIuMzUtMTAuMTRzLjc4LTcuMjEsMi4zNS0xMC4xNGMxLjU3LTIuOTMsMy43My01LjIzLDYuNDktNi45LDIuNzYtMS42Nyw1LjkzLTIuNSw5LjUxLTIuNXM2LjQ5Ljg2LDkuMDMsMi41Nyw0LjUsNC4xMiw1Ljg5LDcuMmMxLjM5LDMuMDgsMi4wOSw2LjcxLDIuMDksMTAuODloLTI5LjMxYy4yNSw0LjA4LDEuNTQsNy4yNiwzLjg4LDkuNTUsMi4zNCwyLjI5LDUuMywzLjQzLDguODgsMy40MywyLjY0LDAsNC44Ni0uNjIsNi42OC0xLjg2LDEuODEtMS4yNCwzLjIyLTIuODgsNC4yMS00LjkybDUuMTUsMi42MWMtLjk0LDEuOTQtMi4yLDMuNjMtMy43Nyw1LjA3LTEuNTcsMS40NC0zLjQxLDIuNTYtNS41MiwzLjM2LTIuMTEuOC00LjQ2LDEuMTktNy4wNSwxLjE5Wk0zNTEuMyw1Mi44M2gyMi40NWMtLjE1LTIuMTQtLjcxLTMuOTgtMS42OC01LjUyLS45Ny0xLjU0LTIuMjMtMi43My0zLjc3LTMuNTgtMS41NC0uODQtMy4yOC0xLjI3LTUuMjItMS4yN3MtMy43LjQxLTUuNDQsMS4yM2MtMS43NC44Mi0zLjE4LDIuMDEtNC4zMywzLjU4LTEuMTQsMS41Ny0xLjgxLDMuNDItMi4wMSw1LjU2WiIvPgogICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTU0LjQxLDI4LjA1Yy0xLjA1LjgxLTIuNTksMi4yMi0zLjQ3LDMuMjgtLjMyLjM5LS45MS4zNy0xLjIyLS4wMS0uODMtMS4wMi0yLjI0LTIuNDQtMy4yNy0zLjI3LS4zOS0uMzEtLjQtLjkxLS4wMS0xLjIyLDEuMDYtLjg4LDIuNDctMi40MiwzLjI4LTMuNDcuMzEtLjQxLjkyLS40MSwxLjI0LDAsLjg3LDEuMDgsMi4zOCwyLjYsMy40NywzLjQ3LjQuMzIuNC45MywwLDEuMjRaIi8+CiAgPC9nPgogIDxnPgogICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNzguMTcsMTQuNzZjLS42MiwxLjk4LTEuNDQsMy45MS0yLjQ2LDUuNzctMS40MywyLjYtMy4yNCw1LjA1LTUuNDUsNy4yNS05LjIxLDkuMjEtMjIuNjMsMTEuNjUtMzQuMDcsNy4zMSw0LjM0LDExLjQ0LDEuOSwyNC44Ni03LjMxLDM0LjA3LTEuOTcsMS45Ny00LjEzLDMuNjMtNi40Miw0Ljk3LTEuOTEsMS4xMy0zLjkyLDIuMDQtNS45OCwyLjczLTMuMjQtNi4wNC00LjQyLTE0LjctNC40Mi0yNi44NywwLTE0LjgzLDEuNzQtMjQuNDUsNi44Ni0zMC40Ny41Mi0uNjEsMS4wNy0xLjE5LDEuNjYtMS43Miw1Ljk5LTUuNDcsMTUuNzMtNy4zMSwzMC45OS03LjMxLDExLjk5LDAsMjAuNTYsMS4xNCwyNi41OSw0LjI3WiIvPgogICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNOTEuMDksNTBjMCwxNS4xMy0xLjgxLDI0LjgzLTcuMTcsMzAuODMtLjYzLjcxLTEuMzEsMS4zNi0yLjA0LDEuOTctNi4wNCw1LTE1LjYxLDYuNzEtMzAuMyw2LjcxLTExLjgxLDAtMjAuMzEtMS4xLTI2LjMyLTQuMTMuNjgtMS45OCwxLjU3LTMuOTEsMi42NS01Ljc2LDEuMzUtMi4zLDMuMDItNC40Nyw0Ljk5LTYuNDQsOS4yMS05LjIxLDIyLjYzLTExLjY1LDM0LjA3LTcuMzEtNC4zMy0xMS40NC0xLjktMjQuODYsNy4zMS0zNC4wNywyLjIxLTIuMjEsNC42Ny00LjA0LDcuMjgtNS40NywxLjc4LS45NywzLjYzLTEuNzcsNS41My0yLjM4LDIuOTMsNiw0LDE0LjQyLDQsMjYuMDVaIi8+CiAgPC9nPgo8L3N2Zz4=" alt="Fishbone">
+      <div class="logo-tagline">AI Visibility for Ecommerce</div>
+    </div>
+    <div class="doc-meta">
+      <div class="doc-meta-label">Pilot Brief</div>
+      <div class="doc-meta-value">
+        DAFNI Hair<br>
+        April 6, 2026
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">Initiative Overview</div>
+    <div class="hero-title">AI Visibility Initiative</div>
+    <p class="hero-body">
+      Shoppers increasingly start their search in AI assistants rather than traditional search engines.
+      When someone asks <em>"best heated brush for thick frizzy hair"</em>, AI systems surface
+      products based on the quality and completeness of their catalog data - attributes like color,
+      product type, hair type, structured descriptions, and brand consistency.
+    </p>
+    <p class="hero-body">
+      This initiative is about understanding what moves the needle for DAFNI Hair specifically,
+      and doing it in a way we can measure clearly with a controlled test.
+    </p>
+  </div>
+
+  <!-- Baseline -->
+  <div class="section">
+    <div class="section-label">Baseline Assessment</div>
+    <div class="section-title">Where Things Stand Today</div>
+    <p>We reviewed your full Google Merchant Center catalog. Here's what we found across the fields AI systems use to match products to queries:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Color</td>
+          <td>Populated on only 3 of 36 products — the field AI shopping uses most heavily for variant matching</td>
+        </tr>
+        <tr>
+          <td>Age group &amp; gender</td>
+          <td>Almost entirely unset (3 and 2 of 36) — limits how AI assistants filter results for shopper queries</td>
+        </tr>
+        <tr>
+          <td>Brand</td>
+          <td>Inconsistent formatting across the catalog (mix of "DAFNI®" and "DAFNI EN") — weakens brand entity recognition</td>
+        </tr>
+        <tr>
+          <td>Product type</td>
+          <td>Set on most products but inconsistent casing and granularity; not aligned to a clean taxonomy</td>
+        </tr>
+        <tr>
+          <td>Structured attributes</td>
+          <td>Hair type, material, and product highlights not populated</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Page break before "The Work" section -->
+  <div class="page-break"></div>
+
+  <!-- What we're doing -->
+  <div class="section">
+    <div class="section-label">The Work</div>
+    <div class="section-title">What We're Doing</div>
+
+    <p>Rather than enriching the whole catalog at once, we're running a controlled matched-pair test. We've selected <strong>4 pairs of products</strong> (8 products total) across Klix Singles, Bows, Chunky Bows, and Hair Care Kits. Within each pair, products are closely matched on historical impressions and sales — so any difference we observe afterward can be attributed to the enrichment, not to one product being intrinsically stronger.</p>
+
+    <p>For each <strong>test</strong> product, we're enriching the key attributes Google and AI assistants use for matching — color, product type, brand consistency, structured taxonomy fields, descriptions, and product highlights. The matched <strong>control</strong> product is left unchanged as the comparison baseline.</p>
+
+    <div class="highlight-box">
+      <p>Changes are made directly in Shopify, which syncs to Google Merchant Center automatically. Prices, inventory, storefront, and campaign settings are untouched. If the test works, we roll the same playbook out to the rest of the catalog with confidence.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Timeline -->
+  <div class="section">
+    <div class="section-label">Timeline</div>
+    <div class="section-title">What Happens Next</div>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-date">April 6, 2026</div>
+        <div class="timeline-desc">Brief shared. Enrichment begins on the 4 test products.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Week 1 check</div>
+        <div class="timeline-desc">Confirm Google Merchant Center has picked up all changes on the test products.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">~28 days post</div>
+        <div class="timeline-desc">Compare impressions, clicks, and sales for test vs control products against the 28-day pre-enrichment baseline. Share results and recommended next steps.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-brand">Fishbone — getfishbone.ai</div>
+    <div class="footer-contact">
+      Ohav Peri · ohav@getfishbone.ai<br>
+      Avishay · avishay@getfishbone.ai
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
