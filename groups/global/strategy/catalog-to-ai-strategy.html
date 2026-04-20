@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fishbone - From Catalog to AI-Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #FAFAFA;
+    color: #1a1a1a;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 48px 24px 64px;
+  }
+
+  .container {
+    max-width: 1000px;
+    width: 100%;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .hero-eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 10px;
+  }
+
+  .hero-title {
+    font-size: 25px;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.35;
+    margin-bottom: 8px;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    color: #888;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .source-block {
+    background: #fff;
+    border: 1.5px solid #d0d0d0;
+    border-radius: 12px;
+    padding: 18px 28px 16px;
+    text-align: center;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .source-logo {
+    margin-bottom: 10px;
+  }
+
+  .source-logo img {
+    height: 36px;
+    width: auto;
+    opacity: 0.85;
+  }
+
+  .source-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 4px;
+  }
+
+  .source-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .source-detail {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 2px;
+  }
+
+  .v-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5px 0;
+  }
+
+  .v-line {
+    width: 1.5px;
+    height: 16px;
+    background: #ccc;
+  }
+
+  .v-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 500;
+    color: #999;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 4px 13px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .v-badge-dot {
+    width: 5px;
+    height: 5px;
+    background: #a5d6a7;
+    border-radius: 50%;
+  }
+
+  .v-note {
+    font-size: 10px;
+    color: #bbb;
+    margin-top: 3px;
+    font-style: italic;
+  }
+
+  .engine {
+    background: #fff;
+    border: 2px solid #1a1a1a;
+    border-radius: 16px;
+    padding: 24px 26px 20px;
+  }
+
+  .engine-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .engine-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 2px;
+  }
+
+  .engine-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .engine-auto {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    color: #888;
+    background: #f3f3f3;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 4px 10px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+
+  .process-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-bottom: 14px;
+  }
+
+  .p-step {
+    background: #f8f8f8;
+    border: 1px solid #e5e5e5;
+    padding: 13px 11px 12px;
+    position: relative;
+  }
+
+  .p-step:first-child { border-radius: 10px 0 0 10px; }
+  .p-step:last-child { border-radius: 0 10px 10px 0; }
+  .p-step + .p-step { border-left: none; }
+
+  .p-step:not(:last-child)::after {
+    content: '›';
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #ccc;
+    z-index: 2;
+    font-weight: 300;
+  }
+
+  .p-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    color: #c0c0c0;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .p-name {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 2px;
+  }
+
+  .p-desc {
+    font-size: 10px;
+    color: #999;
+    line-height: 1.4;
+  }
+
+  .data-layer {
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 20px 26px;
+    text-align: center;
+    margin-top: 6px;
+  }
+
+  .dl-eyebrow {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 5px;
+  }
+
+  .dl-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .dl-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.5;
+  }
+
+  .dl-sub strong {
+    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+  }
+
+  .fan-out {
+    height: 48px;
+  }
+
+  .fan-out svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .powers-label {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .powers-label span {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #b0b0b0;
+  }
+
+  .paths {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 0;
+  }
+
+  .path-card {
+    background: #fff;
+    border: 1.5px solid #d5d5d5;
+    border-radius: 13px;
+    padding: 20px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    opacity: 0.72;
+    transition: opacity 0.2s;
+  }
+
+  .path-card:hover { opacity: 0.88; }
+
+  .path-card.active {
+    border-color: #1a1a1a;
+    border-width: 2px;
+    opacity: 1;
+  }
+
+  .path-tag {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #bbb;
+    margin-bottom: 5px;
+  }
+
+  .path-card.active .path-tag { color: #888; }
+
+  .path-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 2px;
+    line-height: 1.3;
+  }
+
+  .path-subtitle {
+    font-size: 11px;
+    color: #999;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
+  .path-card.active .path-subtitle { color: #777; }
+
+  .sub-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .sub-card {
+    background: #f7f7f7;
+    border: 1px solid #eaeaea;
+    border-radius: 7px;
+    padding: 9px 10px;
+  }
+
+  .sub-card-name {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1px;
+  }
+
+  .sub-card-desc {
+    font-size: 10px;
+    color: #999;
+    line-height: 1.35;
+  }
+
+  .path-card:not(.active) .sub-card {
+    background: #fafafa;
+    border-color: #f0f0f0;
+  }
+
+  .path-card:not(.active) .sub-card-name { color: #666; }
+  .path-card:not(.active) .sub-card-desc { color: #aaa; }
+
+  .proto-row {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+
+  .proto-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #777;
+    background: #f0f0f0;
+    border: 1px solid #e0e0e0;
+    border-radius: 3px;
+    padding: 2px 6px;
+  }
+
+  .path-card:not(.active) .proto-badge {
+    color: #aaa;
+    background: #f5f5f5;
+    border-color: #eee;
+  }
+
+  .proto-note {
+    font-size: 9.5px;
+    color: #aaa;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+
+  .path-card:not(.active) .proto-note { color: #bbb; }
+
+  .path-details {
+    list-style: none;
+    padding: 0;
+    flex: 1;
+  }
+
+  .path-details li {
+    font-size: 11px;
+    color: #666;
+    padding: 5px 0;
+    border-top: 1px solid #f2f2f2;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.4;
+  }
+
+  .path-card:not(.active) .path-details li {
+    color: #999;
+    border-color: #f5f5f5;
+  }
+
+  .li-dot {
+    flex-shrink: 0;
+    width: 4px;
+    height: 4px;
+    background: #ccc;
+    border-radius: 50%;
+    margin-top: 5px;
+  }
+
+  .path-card:not(.active) .li-dot { background: #ddd; }
+
+  .path-status {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-radius: 4px;
+    padding: 4px 9px;
+    margin-top: 12px;
+    align-self: flex-start;
+  }
+
+  .path-card.active .path-status {
+    color: #1a1a1a;
+    background: #f0f0f0;
+    border: 1px solid #d0d0d0;
+  }
+
+  .path-card:not(.active) .path-status {
+    color: #aaa;
+    background: #f5f5f5;
+    border: 1px solid #e8e8e8;
+  }
+
+  .outcome-connectors {
+    height: 28px;
+  }
+
+  .outcome-connectors svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .outcomes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .outcome {
+    text-align: center;
+    padding: 12px 14px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    color: #fff;
+  }
+
+  .outcome-text {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.85);
+  }
+
+  .outcome.dimmed {
+    background: #e0e0e0;
+  }
+
+  .outcome.dimmed .outcome-text {
+    color: #888;
+  }
+
+  .spectrum {
+    padding: 0 4px;
+  }
+
+  .spectrum-bar {
+    height: 3px;
+    background: linear-gradient(to right, #d0d0d0, #1a1a1a);
+    border-radius: 2px;
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  .spectrum-labels {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .spectrum-lbl {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #c0c0c0;
+  }
+
+  .spectrum-dots {
+    position: absolute;
+    top: -3px;
+    left: 0;
+    right: 0;
+    height: 9px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10%;
+  }
+
+  .s-dot {
+    width: 9px;
+    height: 9px;
+    background: #fff;
+    border: 2px solid #aaa;
+    border-radius: 50%;
+  }
+
+  /* ---- Footnote ---- */
+  .footnote {
+    margin-top: 32px;
+    text-align: center;
+    font-size: 11px;
+    color: #bbb;
+    line-height: 1.5;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 14px 24px;
+  }
+
+  .footnote strong {
+    font-weight: 600;
+    color: #999;
+  }
+
+  /* ---- Thesis bar ---- */
+  .thesis-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    padding: 0 8px;
+  }
+
+  .thesis-context {
+    font-size: 12px;
+    font-weight: 500;
+    color: #888;
+    letter-spacing: 0.5px;
+    max-width: 260px;
+    line-height: 1.5;
+  }
+
+  .thesis-context strong {
+    color: #555;
+    font-weight: 600;
+  }
+
+  .thesis-arrow {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, #ccc, #888);
+    margin: 0 20px;
+    position: relative;
+  }
+
+  .thesis-arrow::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: -4px;
+    border-left: 7px solid #888;
+    border-top: 4.5px solid transparent;
+    border-bottom: 4.5px solid transparent;
+  }
+
+  .thesis-arrow-label {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #aaa;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Thesis context bar -->
+  <div class="thesis-bar">
+    <div class="thesis-context">
+      <strong>The shift is inevitable.</strong><br>
+      Every consumer gets a personal AI agent — a butler that aggregates all purchases.
+    </div>
+    <div class="thesis-arrow">
+      <span class="thesis-arrow-label">The brand's strategic response</span>
+    </div>
+    <div class="thesis-context" style="text-align: right;">
+      <strong>But brands still want control.</strong><br>
+      Keep users in your journey, your ecosystem, your experience.
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-eyebrow">How It Works</div>
+    <div class="hero-title">From Your Catalog to AI-Ready - In Days</div>
+    <div class="hero-sub">We connect to your existing product data, build an optimized parallel layer, and create a strategic data foundation that powers every AI touchpoint - current and future.</div>
+  </div>
+
+  <div class="source-block">
+    <div class="source-logo" style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:0.55"><rect x="2" y="2" width="24" height="24" rx="5" stroke="#888" stroke-width="1.8"/><path d="M8 10h12M8 14h8M8 18h10" stroke="#888" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </div>
+    <div class="source-label">Your Source of Truth</div>
+    <div class="source-name" style="font-size:13px;color:#555;font-weight:600;line-height:1.5;">Shopify · WooCommerce · Magento<br>PIM · ERP · Any Source</div>
+    <div class="source-detail">Product catalog</div>
+  </div>
+
+  <div class="v-connector">
+    <div class="v-line"></div>
+    <div class="v-badge">
+      <span class="v-badge-dot"></span>
+      REST API · Read-only
+    </div>
+    <div class="v-note">No plugins · No code changes · No dev sprint</div>
+    <div class="v-line"></div>
+  </div>
+
+  <div class="engine">
+    <div class="engine-header">
+      <div>
+        <div class="engine-label">Fishbone Engine</div>
+        <div class="engine-name">Parallel Data Layer</div>
+      </div>
+      <div class="engine-auto">AUTOMATED · ONGOING · AT SCALE</div>
+    </div>
+
+    <div class="process-strip">
+      <div class="p-step">
+        <div class="p-num">01</div>
+        <div class="p-name">Sanitize</div>
+        <div class="p-desc">Clean, normalize & fill missing values</div>
+      </div>
+      <div class="p-step">
+        <div class="p-num">02</div>
+        <div class="p-name">Validate</div>
+        <div class="p-desc">Cross-reference sources & verify accuracy</div>
+      </div>
+      <div class="p-step">
+        <div class="p-num">03</div>
+        <div class="p-name">Enrich</div>
+        <div class="p-desc">Add critical attributes from external sources</div>
+      </div>
+      <div class="p-step">
+        <div class="p-num">04</div>
+        <div class="p-name">Adapt</div>
+        <div class="p-desc">Translate to each platform's feed schema</div>
+      </div>
+    </div>
+
+    <div class="data-layer">
+      <div class="dl-eyebrow">Output - Your Strategic AI Asset</div>
+      <div class="dl-title">AI-Optimized Product Catalog</div>
+      <div class="dl-sub">Maximum semantic density per SKU · Synced with every product change<br><strong>One optimized data layer - the foundation for every AI path below</strong></div>
+    </div>
+  </div>
+
+  <div class="fan-out">
+    <svg viewBox="0 0 1000 48" preserveAspectRatio="xMidYMid meet">
+      <line x1="500" y1="0" x2="167" y2="42" stroke="#bbb" stroke-width="1.5"/>
+      <line x1="500" y1="0" x2="500" y2="42" stroke="#bbb" stroke-width="1.5"/>
+      <line x1="500" y1="0" x2="833" y2="42" stroke="#bbb" stroke-width="1.5"/>
+      <polygon points="164,42 167,48 170,42" fill="#bbb"/>
+      <polygon points="497,42 500,48 503,42" fill="#bbb"/>
+      <polygon points="830,42 833,48 836,42" fill="#bbb"/>
+    </svg>
+  </div>
+
+  <div class="powers-label">
+    <span>One Foundation - Three Strategic Paths</span>
+  </div>
+
+  <div class="paths">
+
+    <div class="path-card active">
+      <div class="path-tag">Path A - Optimize & Feed</div>
+      <div class="path-title">AI Platform Feeds</div>
+      <div class="path-subtitle">Maximize visibility where AI agents shop for your customers</div>
+
+      <div class="sub-cards">
+        <div class="sub-card">
+          <div class="sub-card-name">OpenAI FeedSpec</div>
+          <div class="sub-card-desc">Enriched catalog → ChatGPT product discovery & recommendations</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-name">Google Merchant Center</div>
+          <div class="sub-card-desc">Enriched catalog → Gemini & AI Mode shopping surfaces</div>
+        </div>
+      </div>
+
+      <div class="proto-row">
+        <span class="proto-badge">UCP</span>
+        <span class="proto-badge">ACP</span>
+      </div>
+      <div class="proto-note">Commerce protocols enabling discovery, cart actions & transactions through AI agents</div>
+
+      <ul class="path-details">
+        <li><span class="li-dot"></span>Feed always fresh, synced & optimized for each platform</li>
+        <li><span class="li-dot"></span>Higher data quality → AI agents prefer your products over competitors</li>
+        <li><span class="li-dot"></span>Competitive edge in every AI-driven recommendation</li>
+      </ul>
+
+      <div class="path-status">← We start here</div>
+    </div>
+
+    <div class="path-card">
+      <div class="path-tag">Path B - Extend Your Brand</div>
+      <div class="path-title">Branded AI Apps</div>
+      <div class="path-subtitle">Bring your ecosystem inside the AI platforms</div>
+
+      <div class="sub-cards">
+        <div class="sub-card">
+          <div class="sub-card-name">ChatGPT App</div>
+          <div class="sub-card-desc">Via OpenAI Apps SDK - your brand experience inside ChatGPT</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-name">Google Business Agent</div>
+          <div class="sub-card-desc">Your branded agent within Google's AI ecosystem</div>
+        </div>
+      </div>
+
+      <ul class="path-details">
+        <li><span class="li-dot"></span>Connected to your existing systems & APIs</li>
+        <li><span class="li-dot"></span>Retain brand identity & user journey inside AI</li>
+        <li><span class="li-dot"></span>Personalized suggestions from purchase history & loyalty</li>
+        <li><span class="li-dot"></span>Custom functionalities tailored to your business</li>
+      </ul>
+
+      <div class="path-status">Powered by same data layer</div>
+    </div>
+
+    <div class="path-card">
+      <div class="path-tag">Path C - Own the Experience</div>
+      <div class="path-title">On-Site AI Agent</div>
+      <div class="path-subtitle">Keep users on your site with an AI-native shopping experience</div>
+
+      <div class="sub-cards">
+        <div class="sub-card">
+          <div class="sub-card-name">Your E-Commerce Agent</div>
+          <div class="sub-card-desc">AI shopping assistant embedded in your website - powered by your enriched catalog</div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-name">WebMCP-Compatible Store</div>
+          <div class="sub-card-desc">Your site declares capabilities as structured tools -- any browser AI agent becomes your shopping assistant</div>
+        </div>
+      </div>
+
+      <div class="proto-row">
+        <span class="proto-badge">WebMCP</span>
+      </div>
+      <div class="proto-note">Web standard (Google + Microsoft) enabling browser AI agents to interact with your store natively</div>
+
+      <ul class="path-details">
+        <li><span class="li-dot"></span>Meet rising consumer expectations for AI-assisted shopping</li>
+        <li><span class="li-dot"></span>Full control over UX, data & customer relationship</li>
+        <li><span class="li-dot"></span>Leverage enriched catalog for smarter on-site recommendations</li>
+        <li><span class="li-dot"></span>Chrome Gemini sidebar rolling out to 3.8B users -- your store is automatically agent-ready</li>
+      </ul>
+
+      <div class="path-status">Powered by same data layer</div>
+    </div>
+
+  </div>
+
+  <div class="outcome-connectors">
+    <svg viewBox="0 0 1000 28" preserveAspectRatio="xMidYMid meet">
+      <line x1="167" y1="0" x2="167" y2="22" stroke="#bbb" stroke-width="1.5"/>
+      <line x1="500" y1="0" x2="500" y2="22" stroke="#ddd" stroke-width="1"/>
+      <line x1="833" y1="0" x2="833" y2="22" stroke="#ddd" stroke-width="1"/>
+      <polygon points="164,22 167,28 170,22" fill="#bbb"/>
+      <polygon points="497,22 500,28 503,22" fill="#ddd"/>
+      <polygon points="830,22 833,28 836,22" fill="#ddd"/>
+    </svg>
+  </div>
+
+  <div class="outcomes">
+    <div class="outcome">
+      <div class="outcome-text">AI agents surface your products<br>over competitors</div>
+    </div>
+    <div class="outcome dimmed">
+      <div class="outcome-text">Your brand & ecosystem live<br>inside the AI platforms</div>
+    </div>
+    <div class="outcome dimmed">
+      <div class="outcome-text">Users stay on your site with<br>a modern AI experience</div>
+    </div>
+  </div>
+
+  <div class="spectrum">
+    <div class="spectrum-bar">
+      <div class="spectrum-dots">
+        <div class="s-dot"></div>
+        <div class="s-dot"></div>
+        <div class="s-dot"></div>
+      </div>
+    </div>
+    <div class="spectrum-labels">
+      <span class="spectrum-lbl">← Visibility & Reach</span>
+      <span class="spectrum-lbl">Control & Ownership →</span>
+    </div>
+  </div>
+
+  <div class="footnote">
+    <strong>The same optimized data layer also powers AI-native paid ads</strong> - enriched catalog data improves targeting,<br>relevance & cost efficiency across sponsored placements in ChatGPT, Gemini & beyond.
+  </div>
+
+</div>
+
+</body>
+</html>

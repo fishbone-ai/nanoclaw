@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catalog Intelligence Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #fff;
+  color: #111;
+  font-family: 'Inter', sans-serif;
+  padding: 48px 44px 64px;
+}
+
+.page { max-width: 1120px; margin: 0 auto; }
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid #111;
+  padding-bottom: 16px;
+  margin-bottom: 36px;
+}
+.eyebrow { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #999; margin-bottom: 7px; }
+.title { font-family: 'EB Garamond', serif; font-size: 26px; font-weight: 500; }
+.header-meta { font-size: 9px; color: #aaa; text-align: right; line-height: 1.9; letter-spacing: .5px; }
+
+/* SECTION STRIP */
+.section-strip {
+  display: grid;
+  grid-template-columns: 160px 36px 172px 52px 1fr 36px 160px 36px 160px;
+  margin-bottom: 8px;
+}
+.sec-label { font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: #bbb; }
+
+/* MAIN FLOW ROW */
+.flow-row {
+  display: grid;
+  grid-template-columns: 160px 36px 172px 52px 1fr 36px 160px 36px 160px;
+  align-items: stretch;
+  min-height: 260px;
+}
+
+/* CONNECTOR CELLS */
+.conn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Simple right arrow */
+.arr-right::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 1.5px;
+  background: #111;
+}
+.arr-right::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid #111;
+}
+
+/* Merge two inputs into one */
+.merge-conn {
+  position: relative;
+}
+.merge-conn .vline {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5px;
+  background: #111;
+  top: 22%;
+  bottom: 22%;
+}
+.merge-conn .hline-top {
+  position: absolute;
+  left: 0; right: 50%;
+  top: 22%;
+  height: 1.5px;
+  background: #111;
+}
+.merge-conn .hline-bot {
+  position: absolute;
+  left: 0; right: 50%;
+  bottom: 22%;
+  height: 1.5px;
+  background: #111;
+}
+.merge-conn .hline-out {
+  position: absolute;
+  left: 50%; right: 0;
+  top: 50%;
+  height: 1.5px;
+  background: #111;
+  transform: translateY(-50%);
+}
+.merge-conn .arrowhead {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid #111;
+}
+
+/* Fork one into two */
+.fork-conn {
+  position: relative;
+}
+.fork-conn .hline-in {
+  position: absolute;
+  left: 0; right: 50%;
+  top: 50%;
+  height: 1.5px;
+  background: #111;
+  transform: translateY(-50%);
+}
+.fork-conn .vline {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5px;
+  background: #111;
+  top: 22%;
+  bottom: 22%;
+}
+.fork-conn .hline-top {
+  position: absolute;
+  left: 50%; right: 0;
+  top: 22%;
+  height: 1.5px;
+  background: #111;
+}
+.fork-conn .hline-bot {
+  position: absolute;
+  left: 50%; right: 0;
+  bottom: 22%;
+  height: 1.5px;
+  background: #111;
+}
+.fork-conn .arr-top {
+  position: absolute;
+  right: 0; top: 22%;
+  transform: translateY(-50%);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid #111;
+}
+.fork-conn .arr-bot {
+  position: absolute;
+  right: 0; bottom: 22%;
+  transform: translateY(50%);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid #111;
+}
+
+/* Gather two into one */
+.gather-conn {
+  position: relative;
+}
+.gather-conn .hline-top {
+  position: absolute;
+  left: 0; right: 50%;
+  top: 22%;
+  height: 1.5px;
+  background: #111;
+}
+.gather-conn .hline-bot {
+  position: absolute;
+  left: 0; right: 50%;
+  bottom: 22%;
+  height: 1.5px;
+  background: #111;
+}
+.gather-conn .vline {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5px;
+  background: #111;
+  top: 22%;
+  bottom: 22%;
+}
+.gather-conn .hline-out {
+  position: absolute;
+  left: 50%; right: 0;
+  top: 50%;
+  height: 1.5px;
+  background: #111;
+  transform: translateY(-50%);
+}
+.gather-conn .arrowhead {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid #111;
+}
+
+/* NODE STYLES */
+.node {
+  border: 1.5px solid #111;
+  padding: 16px 16px 14px;
+  background: #fff;
+  position: relative;
+}
+.node.filled { background: #111; color: #fff; }
+.node.shaded { background: #f3f3f3; }
+.node.dashed { border-style: dashed; }
+
+.node-num {
+  font-family: 'EB Garamond', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+.node.filled .node-num { color: #fff; }
+
+.node-tag {
+  font-size: 7.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #999;
+  margin-bottom: 5px;
+}
+.node.filled .node-tag { color: #777; }
+
+.node-title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
+.node-body {
+  font-size: 9.5px;
+  color: #555;
+  line-height: 1.7;
+}
+.node.filled .node-body { color: #bbb; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+.tag {
+  font-size: 7.5px;
+  border: 1px solid #ccc;
+  padding: 2px 5px;
+  color: #777;
+  border-radius: 2px;
+}
+.node.filled .tag { border-color: #444; color: #999; }
+
+.divider { border-top: 1px solid #ddd; margin: 8px 0; }
+.node.filled .divider { border-color: #2a2a2a; }
+
+.sub { font-size: 8px; font-weight: 700; color: #111; letter-spacing: .5px; margin-bottom: 3px; text-transform: uppercase; }
+.node.filled .sub { color: #ccc; }
+
+.callout {
+  background: #f0f0f0;
+  border-left: 2px solid #111;
+  padding: 6px 9px;
+  margin-top: 8px;
+  font-size: 9px;
+  color: #333;
+  line-height: 1.6;
+}
+.node.filled .callout { background: #1d1d1d; border-left-color: #888; color: #bbb; }
+
+/* DUAL TRACK CELL */
+.dual-track {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dual-track .node {
+  flex: 1;
+}
+.track-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* CYCLE ARC BELOW */
+.cycle-wrap {
+  position: relative;
+  margin-top: 0;
+  height: 72px;
+}
+.cycle-label {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  color: #888;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: #fff;
+  padding: 0 10px;
+  z-index: 2;
+}
+.cycle-left-v {
+  position: absolute;
+  width: 1.5px;
+  height: 32px;
+  top: 0;
+  background: repeating-linear-gradient(to bottom, #999 0, #999 5px, transparent 5px, transparent 10px);
+}
+.cycle-right-v {
+  position: absolute;
+  width: 1.5px;
+  height: 32px;
+  top: 0;
+  background: repeating-linear-gradient(to bottom, #999 0, #999 5px, transparent 5px, transparent 10px);
+}
+.cycle-h {
+  position: absolute;
+  height: 1.5px;
+  top: 32px;
+  background: repeating-linear-gradient(to right, #999 0, #999 6px, transparent 6px, transparent 12px);
+}
+.cycle-arrowhead {
+  position: absolute;
+  top: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 7px solid #999;
+}
+
+/* LEGEND */
+.legend {
+  margin-top: 44px;
+  border-top: 1px solid #ddd;
+  padding-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 28px;
+}
+.leg-num {
+  font-family: 'EB Garamond', serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.leg-title {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  margin-bottom: 6px; color: #111;
+}
+.leg-desc { font-size: 10px; color: #666; line-height: 1.7; }
+
+/* FOOTER */
+.footer {
+  margin-top: 36px;
+  border-top: 1px solid #eee;
+  padding-top: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+.footer-brand { font-family: 'EB Garamond', serif; font-size: 14px; color: #bbb; }
+.footer-note { font-size: 8px; color: #ccc; letter-spacing: 2px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="eyebrow">System Architecture</div>
+      <div class="title">Catalog Intelligence Engine</div>
+    </div>
+    <div class="header-meta">
+      Query-driven enrichment<br>
+      Per-value traceability<br>
+      Closed-loop drift monitoring
+    </div>
+  </div>
+
+  <!-- SECTION LABELS -->
+  <div class="section-strip">
+    <div class="sec-label">Inputs</div>
+    <div></div>
+    <div class="sec-label">Diagnostic</div>
+    <div></div>
+    <div class="sec-label">Remediation — Parallel Tracks</div>
+    <div></div>
+    <div class="sec-label">Output</div>
+    <div></div>
+    <div class="sec-label">Monitor</div>
+  </div>
+
+  <!-- MAIN FLOW -->
+  <div class="flow-row" id="mainflow">
+
+    <!-- INPUTS: stacked 01 + 02 -->
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="node shaded" style="flex:1;">
+        <div class="node-num">01</div>
+        <div class="node-tag">Input A</div>
+        <div class="node-title">Query Bank</div>
+        <div class="node-body">Intent-mapped queries from two paths:</div>
+        <div class="tags">
+          <span class="tag">Product-derived</span>
+          <span class="tag">Persona-derived</span>
+        </div>
+        <div class="node-body" style="margin-top:7px;">Each query maps to expected matches on ChatGPT, Gemini, etc.</div>
+      </div>
+      <div class="node" style="flex:1;">
+        <div class="node-num">02</div>
+        <div class="node-tag">Input B</div>
+        <div class="node-title">Raw Retailer Catalog</div>
+        <div class="node-body">Unvalidated. Contains missing values, non-discrete columns, unstandardized formats, and schema gaps.</div>
+      </div>
+    </div>
+
+    <!-- MERGE → -->
+    <div class="conn merge-conn">
+      <div class="vline"></div>
+      <div class="hline-top"></div>
+      <div class="hline-bot"></div>
+      <div class="hline-out"></div>
+      <div class="arrowhead"></div>
+    </div>
+
+    <!-- 03 DIAGNOSTIC -->
+    <div class="node filled">
+      <div class="node-num">03</div>
+      <div class="node-tag">Core Diagnostic</div>
+      <div class="node-title">Query Test Layer</div>
+      <div class="node-body">Every query fires against the catalog. Pass / Fail per query, logged with full context.</div>
+      <div class="divider"></div>
+      <div class="sub">Failure tracing</div>
+      <div class="node-body">Each failure traced to a specific attribute — missing, malformed, or absent from schema entirely. Compounds across every catalog.</div>
+      <div class="callout">
+        <strong style="color:#ddd;">↓ Two signals</strong><br>
+        A — Fix existing attrs<br>
+        B — Add net-new attrs
+      </div>
+    </div>
+
+    <!-- FORK → two tracks -->
+    <div class="conn fork-conn">
+      <div class="hline-in"></div>
+      <div class="vline"></div>
+      <div class="hline-top"></div>
+      <div class="hline-bot"></div>
+      <div class="arr-top"></div>
+      <div class="arr-bot"></div>
+    </div>
+
+    <!-- DUAL TRACKS: 04 + 05 -->
+    <div class="dual-track">
+      <div class="node shaded">
+        <div class="node-num">04</div>
+        <div class="node-tag">Track A — Normalize &amp; Clean</div>
+        <div class="node-title">Restructure Existing Data</div>
+        <div class="track-inner">
+          <div>
+            <div class="sub">Structural fixes</div>
+            <div class="node-body">Split columns. Normalize formats. Stem. Controlled vocabularies.</div>
+          </div>
+          <div>
+            <div class="sub">Fill missing</div>
+            <div class="node-body">Heuristics (regex from title/desc) + external cross-ref (GS1, competitors).</div>
+          </div>
+          <div>
+            <div class="sub">Validate</div>
+            <div class="node-body">Cross-check vs external. Confidence score per product–attribute.</div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:8px; font-size:8.5px;">
+          <strong>Traceability per cell:</strong> Original · New value · Method · Source · Confidence score
+        </div>
+      </div>
+      <div class="node">
+        <div class="node-num">05</div>
+        <div class="node-tag">Track B — Enrich Net-New Attributes</div>
+        <div class="node-title">Add What Doesn't Exist Yet</div>
+        <div class="track-inner">
+          <div>
+            <div class="sub">Query-failure driven</div>
+            <div class="node-body">Failures unresolvable by normalization → targeted external lookup for that exact gap.</div>
+          </div>
+          <div>
+            <div class="sub">Spontaneous</div>
+            <div class="node-body">Product vs. external source comparison surfaces enrichment opportunities proactively.</div>
+          </div>
+          <div>
+            <div class="sub">Sources</div>
+            <div class="node-body">GS1 · Brand sites · Competitors · Ontologies · Image analysis</div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:8px; font-size:8.5px;">
+          <strong>Same traceability:</strong> Source · Method · Confidence score · Reasoning per product–attribute
+        </div>
+      </div>
+    </div>
+
+    <!-- GATHER → -->
+    <div class="conn gather-conn">
+      <div class="hline-top"></div>
+      <div class="hline-bot"></div>
+      <div class="vline"></div>
+      <div class="hline-out"></div>
+      <div class="arrowhead"></div>
+    </div>
+
+    <!-- 06 OUTPUT -->
+    <div class="node filled">
+      <div class="node-num">06</div>
+      <div class="node-tag">Output</div>
+      <div class="node-title">Enriched Catalog — AI-Ready Layer</div>
+      <div class="node-body">Clean, structured, fully traceable product data.</div>
+      <div class="divider"></div>
+      <div class="sub">Deployed as</div>
+      <div class="tags">
+        <span class="tag">AI Feeds</span>
+        <span class="tag">Branded In-Chat Apps</span>
+        <span class="tag">On-Site Agents</span>
+      </div>
+      <div class="divider"></div>
+      <div class="sub">Every value has</div>
+      <div class="node-body" style="font-size:8.5px;">Source · Method · Confidence score · Change history</div>
+    </div>
+
+    <!-- → MONITOR -->
+    <div class="conn arr-right"></div>
+
+    <!-- 07 MONITOR -->
+    <div class="node dashed">
+      <div class="node-num">07</div>
+      <div class="node-tag">Ongoing · Closed Loop</div>
+      <div class="node-title">Monitor &amp; Drift Detection</div>
+      <div class="node-body">Query bank re-fires continuously per AI platform (ChatGPT, Gemini, etc.).</div>
+      <div class="divider"></div>
+      <div class="sub">Tracks over time</div>
+      <div class="node-body" style="font-size:8.5px;">Pass/fail per query · per product · per platform</div>
+      <div class="divider"></div>
+      <div class="sub">On drift</div>
+      <div class="node-body" style="font-size:8.5px;">Pass→Fail flags re-enrichment signal → returns to tracks 04 + 05</div>
+    </div>
+
+  </div><!-- /flow-row -->
+
+  <!-- CYCLE ARC -->
+  <div class="cycle-wrap" id="cyclewrap">
+    <div class="cycle-label">↺ &nbsp; Re-enrichment feedback loop — monitoring failures re-enter at tracks 04 + 05</div>
+    <div class="cycle-left-v" id="clv"></div>
+    <div class="cycle-right-v" id="crv"></div>
+    <div class="cycle-h" id="ch"></div>
+    <div class="cycle-arrowhead" id="ca"></div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div>
+      <div class="leg-num">01</div>
+      <div class="leg-title">Diagnostic Loop</div>
+      <div class="leg-desc">Query Bank fires against the raw catalog. Failures traced to specific attribute gaps produce two remediation signals: fix existing, add missing.</div>
+    </div>
+    <div>
+      <div class="leg-num">02</div>
+      <div class="leg-title">Remediation Loop</div>
+      <div class="leg-desc">Track A normalizes and cleans. Track B adds net-new attributes. Both produce per-value traceability and confidence scores. No black-box values.</div>
+    </div>
+    <div>
+      <div class="leg-num">03</div>
+      <div class="leg-title">Monitoring Loop</div>
+      <div class="leg-desc">Enriched catalog continuously re-tested per platform. Drift detected, root causes traced, re-enrichment triggered automatically. The loop never ends.</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand"></div>
+    <div class="footer-note">Catalog Intelligence Engine · System Architecture</div>
+  </div>
+
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  const pageEl = document.querySelector('.page');
+  const pageRect = pageEl.getBoundingClientRect();
+
+  // Find the dual-track cell (04+05) and monitor node (07)
+  const flowRow = document.getElementById('mainflow');
+  const children = flowRow.children; // 9 children: inputs, conn, 03, fork, dual, gather, 06, arr, 07
+
+  const dualTrack = children[4]; // 5th child = dual track
+  const monitorNode = children[8]; // 9th child = 07 monitor
+
+  const dualRect = dualTrack.getBoundingClientRect();
+  const monitorRect = monitorNode.getBoundingClientRect();
+  const wrapRect = document.getElementById('cyclewrap').getBoundingClientRect();
+
+  // Centers relative to cycle wrap
+  const dualCx = dualRect.left + dualRect.width / 2 - wrapRect.left;
+  const monitorCx = monitorRect.left + monitorRect.width / 2 - wrapRect.left;
+
+  const leftX = Math.min(dualCx, monitorCx);
+  const rightX = Math.max(dualCx, monitorCx);
+
+  // Left vertical (from dual track down)
+  const clv = document.getElementById('clv');
+  clv.style.left = dualCx + 'px';
+
+  // Right vertical (from monitor down)
+  const crv = document.getElementById('crv');
+  crv.style.left = monitorCx + 'px';
+
+  // Horizontal arc bottom
+  const ch = document.getElementById('ch');
+  ch.style.left = leftX + 'px';
+  ch.style.width = (rightX - leftX) + 'px';
+
+  // Arrowhead on dualCx pointing up
+  const ca = document.getElementById('ca');
+  ca.style.left = (dualCx - 4) + 'px';
+});
+</script>
+</body>
+</html>
