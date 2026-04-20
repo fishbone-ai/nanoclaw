@@ -9,19 +9,16 @@ store/
 data/
 logs/
 
-# Groups - only track base structure and specific CLAUDE.md files
+# Groups - track canon content; ignore live runtime state
 groups/*
 !groups/main/
 !groups/global/
 groups/main/*
-groups/global/*
 !groups/main/CLAUDE.md
-!groups/global/CLAUDE.md
-!groups/global/MEMORY.md
-!groups/global/FISHBONE.md
-!groups/global/learnings/
-groups/global/learnings/*
-!groups/global/learnings/*.md
+
+# Track everything under groups/global except live runtime state
+!groups/global/**
+groups/global/memory/heartbeat-state.json
 
 # Secrets
 *.keys.json
