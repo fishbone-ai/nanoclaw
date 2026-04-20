@@ -68,6 +68,7 @@ From [SPEC.md §9](SPEC.md):
 | File | Purpose |
 |------|---------|
 | [SPEC.md](SPEC.md) | Canonical approved design |
+| [TODO.md](TODO.md) | Phased execution checklist (what to do, in order, with decision gates) |
 | [prompt_he.md](prompt_he.md) | System prompt — Hebrew instructions |
 | [prompt_en.md](prompt_en.md) | System prompt — English instructions, Hebrew output |
 | [onboarding.md](onboarding.md) | M1 opener, copy-paste ready |
