@@ -28,7 +28,7 @@ If any of these are missing or vague, **ask clarifying questions before proceedi
 
 Check for relevant context in the workspace:
 - Meeting transcripts in `calls/meetings/` that might relate to this idea
-- Existing competitor research in `strategy/competitors/`
+- Existing competitor research in `strategy/competitive-analysis/competitors/`
 - Learnings in `learnings/` that might be relevant
 - Previous evaluations in `strategy/evaluations/`
 
@@ -78,7 +78,7 @@ Only start this when the user explicitly says to proceed after a Stage 1 pass.
 
 Before scoring, do actual research. This isn't just vibes -- look for evidence:
 
-- **Competitors**: Search for existing players in this space. Check `strategy/competitors/` for any existing research. Look for recent news, funding rounds, product launches.
+- **Competitors**: Search for existing players in this space. Check `strategy/competitive-analysis/competitors/` for any existing research. Look for recent news, funding rounds, product launches.
 - **Demand signals**: Search for community discussions (Reddit, HN, forums), search trends, job postings that suggest market movement.
 - **Pricing precedent**: Find comparable products and what they charge. This grounds the revenue model score.
 - **Technical landscape**: What's the build stack? What exists as off-the-shelf vs needs to be built?
