@@ -32,7 +32,6 @@ Target: **6 Hebrew ad creatives = 2 angles × 3 formats each**
 
 - [ ] Draft Hebrew ad copy for angle A (Pain): headline, primary text, CTA
 - [ ] Draft Hebrew ad copy for angle B (Friend): headline, primary text, CTA
-- [ ] Drop Utility angle (already decided weak)
 - [ ] Produce Angle A creatives:
   - [ ] 1× 9:16 vertical video, 15–20s, sound-on, hook in first 2s
   - [ ] 1× 4:5 feed video, 15s
