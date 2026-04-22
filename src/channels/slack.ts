@@ -86,7 +86,9 @@ export class SlackChannel implements Channel {
       // After filtering, event is either GenericMessageEvent or BotMessageEvent
       const msg = event as HandledMessageEvent;
 
-      if (!msg.text) return;
+      const files = (msg as { files?: Array<{ id: string; mimetype?: string; url_private_download?: string }> }).files;
+      const audioFile = files?.find(f => f.mimetype?.startsWith('audio/'));
+      if (!msg.text && !audioFile) return;
 
       const jid = `slack:${msg.channel}`;
       const timestamp = new Date(parseFloat(msg.ts) * 1000).toISOString();
@@ -187,7 +189,15 @@ export class SlackChannel implements Channel {
       //   - Channels: @mention, or thread reply where bot already participated
       // Without the prefix, requiresTrigger=true on channel groups will
       // suppress agent invocation while still storing the message for context.
-      let content = msg.text;
+      let content = msg.text || '';
+      if (audioFile && !isBotMessage) {
+        const transcription = await this.transcribeAudioFile(audioFile);
+        if (transcription) {
+          content = content
+            ? `${content}\n[Voice message]: ${transcription}`
+            : `[Voice message]: ${transcription}`;
+        }
+      }
       if (!isBotMessage) {
         const shouldTrigger =
           !isGroup || isMentioned || (isThreadReply && botIsInThread);
@@ -210,6 +220,49 @@ export class SlackChannel implements Channel {
         reply_to_sender_name: replyToSenderName,
       });
     });
+  }
+
+  private async transcribeAudioFile(file: { id: string; url_private_download?: string }): Promise<string | undefined> {
+    try {
+      let downloadUrl = file.url_private_download;
+      if (!downloadUrl) {
+        const info = await this.app.client.files.info({ file: file.id });
+        downloadUrl = (info.file as { url_private_download?: string })?.url_private_download;
+      }
+      if (!downloadUrl) return undefined;
+
+      // Download audio file from Slack (requires bot token auth)
+      const env = readEnvFile(['SLACK_BOT_TOKEN', 'GEMINI_API_KEY']);
+      const audioResp = await fetch(downloadUrl, {
+        headers: { Authorization: `Bearer ${env.SLACK_BOT_TOKEN}` },
+      });
+      if (!audioResp.ok) return undefined;
+      const audioBuffer = await audioResp.arrayBuffer();
+      const audioBase64 = Buffer.from(audioBuffer).toString('base64');
+
+      // Transcribe via Gemini
+      const geminiResp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: 'Transcribe this audio message exactly as spoken. Output only the transcription, nothing else.' },
+                { inline_data: { mime_type: 'audio/mp4', data: audioBase64 } },
+              ],
+            }],
+          }),
+        },
+      );
+      if (!geminiResp.ok) return undefined;
+      const result = await geminiResp.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+      return result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    } catch (err) {
+      logger.debug({ err }, 'Slack: failed to transcribe voice message');
+      return undefined;
+    }
   }
 
   async connect(): Promise<void> {
