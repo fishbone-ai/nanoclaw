@@ -295,6 +295,8 @@ function buildContainerArgs(
     'SLACK_BOT_TOKEN',
     'GEMINI_API_KEY',
     'GOOGLE_SERVICE_ACCOUNT_JSON',
+    'META_ADS_TOKEN',
+    'META_ADS_ACCOUNT_ID',
   ]);
   for (const [key, value] of Object.entries(passthroughEnv)) {
     if (value) args.push('-e', `${key}=${value}`);
