@@ -206,7 +206,14 @@ export class SlackChannel implements Channel {
       // suppress agent invocation while still storing the message for context.
       let content = msg.text || '';
       if (audioFile && !isBotMessage) {
-        logger.info({ fileId: audioFile.id, mimetype: audioFile.mimetype, hasUrl: !!audioFile.url_private_download }, 'Slack: transcribing audio file');
+        logger.info(
+          {
+            fileId: audioFile.id,
+            mimetype: audioFile.mimetype,
+            hasUrl: !!audioFile.url_private_download,
+          },
+          'Slack: transcribing audio file',
+        );
         const transcription = await this.transcribeAudioFile(audioFile);
         if (transcription) {
           content = content
@@ -250,7 +257,10 @@ export class SlackChannel implements Channel {
           ?.url_private_download;
       }
       if (!downloadUrl) {
-        logger.warn({ fileId: file.id }, 'Slack: no download URL for audio file');
+        logger.warn(
+          { fileId: file.id },
+          'Slack: no download URL for audio file',
+        );
         return undefined;
       }
 
@@ -260,7 +270,10 @@ export class SlackChannel implements Channel {
         headers: { Authorization: `Bearer ${env.SLACK_BOT_TOKEN}` },
       });
       if (!audioResp.ok) {
-        logger.warn({ status: audioResp.status, fileId: file.id }, 'Slack: audio download failed');
+        logger.warn(
+          { status: audioResp.status, fileId: file.id },
+          'Slack: audio download failed',
+        );
         return undefined;
       }
       const audioBuffer = await audioResp.arrayBuffer();
@@ -268,7 +281,7 @@ export class SlackChannel implements Channel {
 
       // Transcribe via Gemini
       const geminiResp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-05-06:generateContent?key=${env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${env.GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -290,13 +303,17 @@ export class SlackChannel implements Channel {
       );
       if (!geminiResp.ok) {
         const body = await geminiResp.text();
-        logger.warn({ status: geminiResp.status, body }, 'Slack: Gemini transcription failed');
+        logger.warn(
+          { status: geminiResp.status, body },
+          'Slack: Gemini transcription failed',
+        );
         return undefined;
       }
       const result = (await geminiResp.json()) as {
         candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
       };
-      const transcription = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      const transcription =
+        result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
       logger.info({ transcription }, 'Slack: voice transcription result');
       return transcription;
     } catch (err) {
