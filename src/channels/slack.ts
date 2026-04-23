@@ -81,13 +81,21 @@ export class SlackChannel implements Channel {
       // Bolt's event type is the full MessageEvent union (17+ subtypes).
       // We filter on subtype first, then narrow to the two types we handle.
       const subtype = (event as { subtype?: string }).subtype;
-      if (subtype && subtype !== 'bot_message') return;
+      if (subtype && subtype !== 'bot_message' && subtype !== 'file_share') return;
 
       // After filtering, event is either GenericMessageEvent or BotMessageEvent
       const msg = event as HandledMessageEvent;
 
-      const files = (msg as { files?: Array<{ id: string; mimetype?: string; url_private_download?: string }> }).files;
-      const audioFile = files?.find(f => f.mimetype?.startsWith('audio/'));
+      const files = (
+        msg as {
+          files?: Array<{
+            id: string;
+            mimetype?: string;
+            url_private_download?: string;
+          }>;
+        }
+      ).files;
+      const audioFile = files?.find((f) => f.mimetype?.startsWith('audio/'));
       if (!msg.text && !audioFile) return;
 
       const jid = `slack:${msg.channel}`;
@@ -222,12 +230,16 @@ export class SlackChannel implements Channel {
     });
   }
 
-  private async transcribeAudioFile(file: { id: string; url_private_download?: string }): Promise<string | undefined> {
+  private async transcribeAudioFile(file: {
+    id: string;
+    url_private_download?: string;
+  }): Promise<string | undefined> {
     try {
       let downloadUrl = file.url_private_download;
       if (!downloadUrl) {
         const info = await this.app.client.files.info({ file: file.id });
-        downloadUrl = (info.file as { url_private_download?: string })?.url_private_download;
+        downloadUrl = (info.file as { url_private_download?: string })
+          ?.url_private_download;
       }
       if (!downloadUrl) return undefined;
 
@@ -247,17 +259,25 @@ export class SlackChannel implements Channel {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: 'Transcribe this audio message exactly as spoken. Output only the transcription, nothing else.' },
-                { inline_data: { mime_type: 'audio/mp4', data: audioBase64 } },
-              ],
-            }],
+            contents: [
+              {
+                parts: [
+                  {
+                    text: 'Transcribe this audio message exactly as spoken. Output only the transcription, nothing else.',
+                  },
+                  {
+                    inline_data: { mime_type: 'audio/mp4', data: audioBase64 },
+                  },
+                ],
+              },
+            ],
           }),
         },
       );
       if (!geminiResp.ok) return undefined;
-      const result = await geminiResp.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+      const result = (await geminiResp.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      };
       return result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     } catch (err) {
       logger.debug({ err }, 'Slack: failed to transcribe voice message');
