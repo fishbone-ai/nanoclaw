@@ -128,7 +128,7 @@ export class SlackChannel implements Channel {
       const isMentioned =
         !!this.botUserId &&
         !isBotMessage &&
-        msg.text.includes(`<@${this.botUserId}>`);
+        (msg.text ?? '').includes(`<@${this.botUserId}>`);
 
       // For thread replies, fetch full thread so the agent has context and
       // we can determine whether the bot is already part of the conversation.
