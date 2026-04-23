@@ -33,6 +33,31 @@ import { RegisteredGroup } from './types.js';
 
 // Sentinel markers for robust output parsing (must match agent-runner)
 const OUTPUT_START_MARKER = '---NANOCLAW_OUTPUT_START---';
+
+function readProjectMcpServers(): Record<string, unknown> {
+  const mcpJsonPath = path.join(process.cwd(), '.mcp.json');
+  if (!fs.existsSync(mcpJsonPath)) return {};
+  try {
+    const content = JSON.parse(fs.readFileSync(mcpJsonPath, 'utf8'));
+    return content.mcpServers ?? {};
+  } catch {
+    return {};
+  }
+}
+
+function resolveHostCredentialsPath(): string | null {
+  const homeDir = process.env.HOME || '/root';
+  const direct = path.join(homeDir, '.credentials.json');
+  if (fs.existsSync(direct)) return direct;
+  // .claude.json may be a symlink (e.g. HA addon); check same dir as target
+  try {
+    const claudeJson = path.join(homeDir, '.claude.json');
+    const target = fs.readlinkSync(claudeJson);
+    const sibling = path.join(path.dirname(path.resolve(homeDir, target)), '.credentials.json');
+    if (fs.existsSync(sibling)) return sibling;
+  } catch {}
+  return null;
+}
 const OUTPUT_END_MARKER = '---NANOCLAW_OUTPUT_END---';
 
 export interface ContainerInput {
@@ -145,28 +170,27 @@ function buildVolumeMounts(
   );
   fs.mkdirSync(groupSessionsDir, { recursive: true });
   const settingsFile = path.join(groupSessionsDir, 'settings.json');
-  if (!fs.existsSync(settingsFile)) {
-    fs.writeFileSync(
-      settingsFile,
-      JSON.stringify(
-        {
-          env: {
-            // Enable agent swarms (subagent orchestration)
-            // https://code.claude.com/docs/en/agent-teams#orchestrate-teams-of-claude-code-sessions
-            CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1',
-            // Load CLAUDE.md from additional mounted directories
-            // https://code.claude.com/docs/en/memory#load-memory-from-additional-directories
-            CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD: '1',
-            // Enable Claude's memory feature (persists user preferences between sessions)
-            // https://code.claude.com/docs/en/memory#manage-auto-memory
-            CLAUDE_CODE_DISABLE_AUTO_MEMORY: '0',
-          },
+  fs.writeFileSync(
+    settingsFile,
+    JSON.stringify(
+      {
+        env: {
+          // Enable agent swarms (subagent orchestration)
+          // https://code.claude.com/docs/en/agent-teams#orchestrate-teams-of-claude-code-sessions
+          CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1',
+          // Load CLAUDE.md from additional mounted directories
+          // https://code.claude.com/docs/en/memory#load-memory-from-additional-directories
+          CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD: '1',
+          // Enable Claude's memory feature (persists user preferences between sessions)
+          // https://code.claude.com/docs/en/memory#manage-auto-memory
+          CLAUDE_CODE_DISABLE_AUTO_MEMORY: '0',
         },
-        null,
-        2,
-      ) + '\n',
-    );
-  }
+        mcpServers: readProjectMcpServers(),
+      },
+      null,
+      2,
+    ) + '\n',
+  );
 
   // Sync skills from container/skills/ into each group's .claude/skills/
   const skillsSrc = path.join(process.cwd(), 'container', 'skills');
@@ -202,6 +226,40 @@ function buildVolumeMounts(
     containerPath: '/home/node/.claude.json',
     readonly: false,
   });
+
+  // Mount project .mcp.json one level above the CWD (/workspace) so Claude Code
+  // finds it when walking up from /workspace/group. The project root mount is at
+  // /workspace/project which is outside the CWD hierarchy, so we need this separately.
+  const mcpJsonSrc = path.join(process.cwd(), '.mcp.json');
+  if (fs.existsSync(mcpJsonSrc)) {
+    mounts.push({
+      hostPath: mcpJsonSrc,
+      containerPath: '/workspace/.mcp.json',
+      readonly: true,
+    });
+  }
+
+  // Sync MCP OAuth tokens from host into this group's credentials file.
+  // Only the mcpOAuth section is forwarded — Claude API tokens stay proxy-controlled.
+  // Writable so the Claude CLI can update tokens on refresh.
+  const hostCredsPath = resolveHostCredentialsPath();
+  if (hostCredsPath) {
+    const groupCredsFile = path.join(DATA_DIR, 'sessions', group.folder, '.credentials.json');
+    try {
+      const hostCreds = JSON.parse(fs.readFileSync(hostCredsPath, 'utf8'));
+      fs.writeFileSync(
+        groupCredsFile,
+        JSON.stringify({ mcpOAuth: hostCreds.mcpOAuth ?? {} }, null, 2) + '\n',
+      );
+      mounts.push({
+        hostPath: groupCredsFile,
+        containerPath: '/home/node/.credentials.json',
+        readonly: false,
+      });
+    } catch (err) {
+      logger.warn({ err }, 'Failed to sync MCP OAuth credentials to container');
+    }
+  }
 
   // Per-group IPC namespace: each group gets its own IPC directory
   // This prevents cross-group privilege escalation via IPC

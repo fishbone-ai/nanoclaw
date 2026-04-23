@@ -469,6 +469,7 @@ async function runQuery(
         'Skill',
         'NotebookEdit',
         'mcp__nanoclaw__*',
+        'mcp__supabase__*',
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
