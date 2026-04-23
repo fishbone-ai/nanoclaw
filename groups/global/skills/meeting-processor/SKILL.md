@@ -139,3 +139,9 @@ Add to `/workspace/global/learnings/YYYY-MM.md` (create if not exists):
 - learning 2
 ```
 Use the Edit/Write tools directly.
+
+### 7. Commit to git
+After writing the transcript and learnings, commit them:
+```bash
+cd /workspace/project && git add groups/global/calls/meetings/ groups/global/learnings/ && git commit -m "feat(transcription): <meeting-title> YYYY-MM-DD"
+```

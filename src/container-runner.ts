@@ -53,7 +53,10 @@ function resolveHostCredentialsPath(): string | null {
   try {
     const claudeJson = path.join(homeDir, '.claude.json');
     const target = fs.readlinkSync(claudeJson);
-    const sibling = path.join(path.dirname(path.resolve(homeDir, target)), '.credentials.json');
+    const sibling = path.join(
+      path.dirname(path.resolve(homeDir, target)),
+      '.credentials.json',
+    );
     if (fs.existsSync(sibling)) return sibling;
   } catch {}
   return null;
@@ -139,7 +142,23 @@ function buildVolumeMounts(
         containerPath: '/workspace/global',
         readonly: false,
       });
+      // Shadow groups/global inside the read-only project tree so git sees the
+      // live writable files (not the stale read-only snapshot) when staging commits.
+      mounts.push({
+        hostPath: globalDir,
+        containerPath: '/workspace/project/groups/global',
+        readonly: false,
+      });
     }
+
+    // Make .git writable so main-group agents can commit workspace changes
+    // (transcripts, learnings, etc.). src/ and other app code remain read-only
+    // via the parent /workspace/project mount, so agents can't modify host code.
+    mounts.push({
+      hostPath: path.join(projectRoot, '.git'),
+      containerPath: '/workspace/project/.git',
+      readonly: false,
+    });
   } else {
     // Other groups only get their own folder
     mounts.push({
@@ -244,7 +263,12 @@ function buildVolumeMounts(
   // Writable so the Claude CLI can update tokens on refresh.
   const hostCredsPath = resolveHostCredentialsPath();
   if (hostCredsPath) {
-    const groupCredsFile = path.join(DATA_DIR, 'sessions', group.folder, '.credentials.json');
+    const groupCredsFile = path.join(
+      DATA_DIR,
+      'sessions',
+      group.folder,
+      '.credentials.json',
+    );
     try {
       const hostCreds = JSON.parse(fs.readFileSync(hostCredsPath, 'utf8'));
       fs.writeFileSync(
