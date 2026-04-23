@@ -206,6 +206,7 @@ export class SlackChannel implements Channel {
       // suppress agent invocation while still storing the message for context.
       let content = msg.text || '';
       if (audioFile && !isBotMessage) {
+        logger.info({ fileId: audioFile.id, mimetype: audioFile.mimetype, hasUrl: !!audioFile.url_private_download }, 'Slack: transcribing audio file');
         const transcription = await this.transcribeAudioFile(audioFile);
         if (transcription) {
           content = content
@@ -248,20 +249,26 @@ export class SlackChannel implements Channel {
         downloadUrl = (info.file as { url_private_download?: string })
           ?.url_private_download;
       }
-      if (!downloadUrl) return undefined;
+      if (!downloadUrl) {
+        logger.warn({ fileId: file.id }, 'Slack: no download URL for audio file');
+        return undefined;
+      }
 
       // Download audio file from Slack (requires bot token auth)
       const env = readEnvFile(['SLACK_BOT_TOKEN', 'GEMINI_API_KEY']);
       const audioResp = await fetch(downloadUrl, {
         headers: { Authorization: `Bearer ${env.SLACK_BOT_TOKEN}` },
       });
-      if (!audioResp.ok) return undefined;
+      if (!audioResp.ok) {
+        logger.warn({ status: audioResp.status, fileId: file.id }, 'Slack: audio download failed');
+        return undefined;
+      }
       const audioBuffer = await audioResp.arrayBuffer();
       const audioBase64 = Buffer.from(audioBuffer).toString('base64');
 
       // Transcribe via Gemini
       const geminiResp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-05-06:generateContent?key=${env.GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -281,13 +288,19 @@ export class SlackChannel implements Channel {
           }),
         },
       );
-      if (!geminiResp.ok) return undefined;
+      if (!geminiResp.ok) {
+        const body = await geminiResp.text();
+        logger.warn({ status: geminiResp.status, body }, 'Slack: Gemini transcription failed');
+        return undefined;
+      }
       const result = (await geminiResp.json()) as {
         candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
       };
-      return result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      const transcription = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      logger.info({ transcription }, 'Slack: voice transcription result');
+      return transcription;
     } catch (err) {
-      logger.debug({ err }, 'Slack: failed to transcribe voice message');
+      logger.warn({ err }, 'Slack: failed to transcribe voice message');
       return undefined;
     }
   }
