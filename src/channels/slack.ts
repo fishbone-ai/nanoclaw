@@ -81,20 +81,27 @@ export class SlackChannel implements Channel {
       // Bolt's event type is the full MessageEvent union (17+ subtypes).
       // We filter on subtype first, then narrow to the two types we handle.
       const subtype = (event as { subtype?: string }).subtype;
-      if (subtype && subtype !== 'bot_message' && subtype !== 'file_share') return;
+      if (subtype && subtype !== 'bot_message' && subtype !== 'file_share')
+        return;
 
       // After filtering, event is either GenericMessageEvent or BotMessageEvent
       const msg = event as HandledMessageEvent;
 
-      const files = (
-        msg as {
-          files?: Array<{
-            id: string;
-            mimetype?: string;
-            url_private_download?: string;
-          }>;
-        }
-      ).files;
+      type SlackFileRef = {
+        id: string;
+        mimetype?: string;
+        url_private_download?: string;
+      };
+      const msgAny = msg as {
+        files?: SlackFileRef[];
+        file?: SlackFileRef;
+      };
+      // file_share subtype uses singular `file`; newer uploads use plural `files`
+      const files = msgAny.files?.length
+        ? msgAny.files
+        : msgAny.file
+          ? [msgAny.file]
+          : undefined;
       const audioFile = files?.find((f) => f.mimetype?.startsWith('audio/'));
       if (!msg.text && !audioFile) return;
 
