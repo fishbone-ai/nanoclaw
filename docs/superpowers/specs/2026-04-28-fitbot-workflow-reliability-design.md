@@ -226,15 +226,56 @@ From ~16,100 to ~15,500 input tokens per turn. Not a dramatic reduction but mean
 ## What this does NOT fix
 
 - The underlying Gemini flakiness. Retries may hit the same 0-token failure back-to-back. The fallback is a safety net, not a cure. If failure rate is high, switching models should be reconsidered.
-- Nudge executions. These are separate short-lived executions triggered via API and already use `complete_task`. No changes needed for nudges.
 - The `state_get` removal means the model can no longer access live-updated state mid-turn (e.g., if state changes during a turn). In practice this doesn't happen — the workflow is single-threaded per user.
 
 ---
 
-## Open questions
+## Resolved decisions
 
-1. **Decide node implementation**: AI decide vs Kapso function for `agent_last_message` check. AI decide introduces one LLM call per turn. A Kapso serverless function is deterministic and free. Recommend function — needs implementation.
+### OQ1 — Reply detection: Kapso function ✅
 
-2. **Nudge flow**: Nudge executions start via the `fitbot-outreach` API trigger, bypassing `load_state`. The nudge system prompt section handles this ("When you ARE the nudge, read `{{user_state}}`") — but `user_state` won't be pre-populated for nudge executions unless the nudge workflow trigger also calls `load_state` first. To be verified during implementation.
+Function `fitbot-reply-check` created and deployed.
 
-3. **retry_count initialisation**: Kapso workflow variables are scoped to the execution. Since the new design uses a single long-running execution (like the current one), `retry_count` persists across turns and is only reset on successful reply. This is correct behaviour. Confirm that Kapso initialises undefined variables to `0` or handle explicitly.
+- **ID:** `88dfc487-0f8f-4bde-89b8-b67d84bfbd69`
+- **Invoke URL:** `https://api.kapso.ai/platform/v1/functions/88dfc487-0f8f-4bde-89b8-b67d84bfbd69/invoke`
+- **Logic:** reads `execution_context.context.agent_last_message`; returns `{ next_edge: "replied" }` or `{ next_edge: "no_reply" }`. Falls back to first available edge if neither is found.
+- **Tested:** all three cases (message present, null, key missing) — correct.
+
+Use as the function for the `decide` node after the agent. No LLM call, deterministic.
+
+### OQ2 — Nudge entrypoint: decide after Start ✅
+
+Kapso triggers always start from the `Start` node — no alternative entry point in the API. Solution: add a decide node immediately after `Start` that checks `{{nudge_intent}}`.
+
+**Updated full workflow graph:**
+
+```
+[Start]
+    ↓
+[Decide: nudge_intent set?]
+    ↓ yes (nudge)                      ↓ no (inbound)
+[load_state trigger=nudge]        [load_state trigger=inbound]
+    ↓                                   ↓
+[Agent: complete_task]            [Agent: complete_task]
+    ↓                                   ↓
+  END                         [Decide: fitbot-reply-check]
+                                ↓ replied        ↓ no_reply
+                          [save retry=0]    [save retry++]
+                                ↓                ↓
+                          [Wait for      [Decide: retry ≤ 2?]
+                           Response]       ↓ yes      ↓ no
+                                ↓     [load_state] [Send fallback]
+                          [load_state]     ↓        [save retry=0]
+                                ↓     [Agent]           ↓
+                             [Agent]              [Wait for Response]
+                                                        ↓
+                                                  [load_state]
+                                                        ↓
+                                                     [Agent]
+```
+
+The nudge path is lean: load state, run agent once, end. No retry loop, no wait.
+
+### OQ3 — retry_count: 2 retries accepted ✅
+
+Maximum 2 retries before fallback. `retry_count` is a workflow variable, reset to `0` on any successful reply. Initialise explicitly to `0` in a node before the first use to avoid undefined behaviour.
