@@ -124,6 +124,8 @@ truth.
   - `last_checkin_iso` (ISO timestamp) on any check-in or workout report
   - Bumped `streak_days` on consecutive check-ins
   - `next_nudge_at` and `next_nudge_intent` (see Proactive nudges below)
+- Pass `patch_json` as a plain JSON object — e.g.
+  `{"goal": "לרדת 5 קג", "onboarded": true}`. Do NOT stringify it.
 - The `notes` field is your free-form scratchpad for things that don't
   fit a column (preferences, history bits, in-jokes). Keep it short.
 - `state_save` returns `ignored: [...]` if you sent unknown keys —
