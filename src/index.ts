@@ -1,3 +1,4 @@
+import { execFile } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -75,6 +76,12 @@ let sessions: Record<string, string> = {};
 let registeredGroups: Record<string, RegisteredGroup> = {};
 let lastAgentTimestamp: Record<string, string> = {};
 let messageLoopRunning = false;
+
+// Tracks the Slack thread (or message) to reply to for each active group.
+// Updated both when a new container starts AND when messages are piped to a
+// running container, so the reply always lands in the thread of the most
+// recent trigger — not the one that originally spawned the container.
+const activeReplyTarget: Record<string, string | undefined> = {};
 
 const channels: Channel[] = [];
 const queue = new GroupQueue();
@@ -216,16 +223,24 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
 
   if (missedMessages.length === 0) return true;
 
-  // Check if trigger is required and present
+  // Check if trigger is required and present; capture the last triggering
+  // message so responses land in its thread even if non-trigger messages
+  // (e.g. replies in other threads) arrived after the @mention.
+  let triggerSource: NewMessage | undefined;
   if (group.requiresTrigger !== false) {
     const triggerPattern = getTriggerPattern(group.trigger);
     const allowlistCfg = loadSenderAllowlist();
-    const hasTrigger = missedMessages.some(
-      (m) =>
+    for (let i = missedMessages.length - 1; i >= 0; i--) {
+      const m = missedMessages[i];
+      if (
         triggerPattern.test(m.content.trim()) &&
-        (m.is_from_me || isTriggerAllowed(chatJid, m.sender, allowlistCfg)),
-    );
-    if (!hasTrigger) return true;
+        (m.is_from_me || isTriggerAllowed(chatJid, m.sender, allowlistCfg))
+      ) {
+        triggerSource = m;
+        break;
+      }
+    }
+    if (!triggerSource) return true;
   }
 
   const prompt = formatMessages(missedMessages, TIMEZONE);
@@ -257,7 +272,14 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
   };
 
   const lastMessage = missedMessages[missedMessages.length - 1];
-  const triggerMessageId = lastMessage.reply_to_message_id || lastMessage.id;
+  // Reply to the thread of the triggering message, not the last message
+  // overall — prevents wrong-thread routing when non-trigger messages
+  // (e.g. a reply in an older thread) arrive after the @mention.
+  const replySource = triggerSource ?? lastMessage;
+  const triggerMessageId = replySource.reply_to_message_id || replySource.id;
+  // Publish so the message loop can update it when piping new messages to
+  // this container (e.g. a new thread's @mention arrives mid-run).
+  activeReplyTarget[chatJid] = triggerMessageId;
   await channel.setTyping?.(chatJid, true, triggerMessageId);
   let hadError = false;
   let outputSentToUser = false;
@@ -273,10 +295,13 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
       const text = raw.replace(/<internal>[\s\S]*?<\/internal>/g, '').trim();
       logger.info({ group: group.name }, `Agent output: ${raw.length} chars`);
       if (text) {
-        await channel.sendMessage(chatJid, text, triggerMessageId);
+        // Use the current reply target — may have been updated by the message
+        // loop if a new triggering message was piped to this container.
+        const replyId = activeReplyTarget[chatJid] ?? triggerMessageId;
+        await channel.sendMessage(chatJid, text, replyId);
         if (!outputSentToUser) {
           // Clear typing indicator as soon as first output reaches the user
-          await channel.setTyping?.(chatJid, false, triggerMessageId);
+          await channel.setTyping?.(chatJid, false, replyId);
         }
         outputSentToUser = true;
       }
@@ -295,8 +320,9 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
 
   // Fallback: clear typing indicator if no output was sent (error path)
   if (!outputSentToUser) {
-    await channel.setTyping?.(chatJid, false, triggerMessageId);
+    await channel.setTyping?.(chatJid, false, activeReplyTarget[chatJid] ?? triggerMessageId);
   }
+  delete activeReplyTarget[chatJid];
   if (idleTimer) clearTimeout(idleTimer);
 
   if (output === 'error' || hadError) {
@@ -320,6 +346,75 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
   }
 
   return true;
+}
+
+function findClaudeMemPluginRoot(): string | null {
+  const bases = [
+    '/data/claude-home/plugins/cache/thedotmack/claude-mem',
+    path.join(process.env.HOME || '/root', '.claude/plugins/cache/thedotmack/claude-mem'),
+  ];
+  for (const base of bases) {
+    if (!fs.existsSync(base)) continue;
+    const versions = fs.readdirSync(base).filter((v) => /^\d+\.\d+\.\d+$/.test(v));
+    if (!versions.length) continue;
+    const latest = versions.sort((a, b) => {
+      const pa = a.split('.').map(Number);
+      const pb = b.split('.').map(Number);
+      return pb[0] - pa[0] || pb[1] - pa[1] || pb[2] - pa[2];
+    })[0];
+    const bunRunner = path.join(base, latest, 'scripts', 'bun-runner.js');
+    if (fs.existsSync(bunRunner)) return path.join(base, latest);
+  }
+  return null;
+}
+
+async function callMemoryHook(
+  hookName: string,
+  payload: Record<string, unknown>,
+): Promise<void> {
+  const pluginRoot = findClaudeMemPluginRoot();
+  if (!pluginRoot) return;
+  const bunRunner = path.join(pluginRoot, 'scripts', 'bun-runner.js');
+  const service = path.join(pluginRoot, 'scripts', 'worker-service.cjs');
+  return new Promise((resolve) => {
+    const child = execFile(
+      'node',
+      [bunRunner, service, 'hook', 'claude-code', hookName],
+      { timeout: 5000 },
+      () => resolve(),
+    );
+    child.stdin?.write(JSON.stringify(payload));
+    child.stdin?.end();
+    child.on('error', () => resolve());
+  });
+}
+
+async function fetchMemoryContext(): Promise<string> {
+  try {
+    const port = process.env.CLAUDE_MEM_WORKER_PORT || '37777';
+    const res = await fetch(
+      `http://127.0.0.1:${port}/api/observations?limit=50`,
+      { signal: AbortSignal.timeout(500) },
+    );
+    if (!res.ok) return '';
+    const data = (await res.json()) as {
+      items: Array<{
+        id: number;
+        type: string;
+        title: string;
+        created_at: string;
+      }>;
+    };
+    if (!data.items?.length) return '';
+    const lines = data.items.map((obs) => {
+      const d = new Date(obs.created_at);
+      const label = `${d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}`;
+      return `${obs.id} ${label} [${obs.type}] ${obs.title}`;
+    });
+    return `<system-reminder>\n[Memory — recent observations from this project]\n\n${lines.join('\n')}\n\nFetch full details: GET http://127.0.0.1:${port}/api/observations/{id}\n</system-reminder>\n\n`;
+  } catch {
+    return '';
+  }
 }
 
 async function runAgent(
@@ -368,11 +463,23 @@ async function runAgent(
       }
     : undefined;
 
+  const memoryContext = await fetchMemoryContext();
+  const promptWithMemory = memoryContext ? memoryContext + prompt : prompt;
+
+  const memSessionId = `nanoclaw-${group.folder}`;
+  const projectRoot = process.cwd();
+  callMemoryHook('session-init', {
+    session_id: memSessionId,
+    cwd: projectRoot,
+    hook_event_name: 'UserPromptSubmit',
+    prompt: prompt.slice(0, 2000),
+  }).catch(() => undefined);
+
   try {
     const output = await runContainerAgent(
       group,
       {
-        prompt,
+        prompt: promptWithMemory,
         sessionId,
         groupFolder: group.folder,
         chatJid,
@@ -387,6 +494,17 @@ async function runAgent(
     if (output.newSessionId) {
       sessions[group.folder] = output.newSessionId;
       setSession(group.folder, output.newSessionId);
+    }
+
+    if (output.result) {
+      callMemoryHook('observation', {
+        session_id: memSessionId,
+        cwd: projectRoot,
+        hook_event_name: 'PostToolUse',
+        tool_name: 'AgentConversation',
+        tool_input: { group: group.name, prompt: prompt.slice(0, 500) },
+        tool_response: output.result.slice(0, 3000),
+      }).catch(() => undefined);
     }
 
     if (output.status === 'error') {
@@ -508,6 +626,33 @@ async function startMessageLoop(): Promise<void> {
             lastAgentTimestamp[chatJid] =
               messagesToSend[messagesToSend.length - 1].timestamp;
             saveState();
+
+            // Update the reply target so the running container's response
+            // lands in the thread of THIS trigger, not the one that originally
+            // spawned the container.
+            {
+              const triggerMsgs = needsTrigger
+                ? (() => {
+                    const pat = getTriggerPattern(group.trigger);
+                    const cfg = loadSenderAllowlist();
+                    for (let i = groupMessages.length - 1; i >= 0; i--) {
+                      const m = groupMessages[i];
+                      if (
+                        pat.test(m.content.trim()) &&
+                        (m.is_from_me || isTriggerAllowed(chatJid, m.sender, cfg))
+                      ) {
+                        return m;
+                      }
+                    }
+                    return null;
+                  })()
+                : messagesToSend[messagesToSend.length - 1];
+              if (triggerMsgs) {
+                activeReplyTarget[chatJid] =
+                  triggerMsgs.reply_to_message_id || triggerMsgs.id;
+              }
+            }
+
             // Show typing indicator while the container processes the piped message
             channel
               .setTyping?.(
