@@ -50,11 +50,18 @@ server.tool(
       .describe(
         'Your role/identity name (e.g. "Researcher"). When set, messages appear from a dedicated bot in Telegram.',
       ),
+    target_jid: z
+      .string()
+      .optional()
+      .describe(
+        '(Main group only) JID of a different group to send the message to (e.g. "slack:C0ALJGPQSL8"). Defaults to the current group.',
+      ),
   },
   async (args) => {
+    const targetJid = isMain && args.target_jid ? args.target_jid : chatJid;
     const data: Record<string, string | undefined> = {
       type: 'message',
-      chatJid,
+      chatJid: targetJid,
       text: args.text,
       sender: args.sender || undefined,
       groupFolder,
