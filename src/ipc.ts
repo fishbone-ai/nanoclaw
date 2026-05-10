@@ -246,15 +246,24 @@ export async function processTaskIpc(
           }
           nextRun = new Date(Date.now() + ms).toISOString();
         } else if (scheduleType === 'once') {
-          const date = new Date(data.schedule_value);
-          if (isNaN(date.getTime())) {
+          // Parse as local time in the configured TIMEZONE (consistent with cron parsing).
+          // Without this, bare ISO strings are treated as UTC, not local time.
+          // Use Intl to compute the TIMEZONE's UTC offset at this time (no external deps).
+          const approxUtc = new Date(data.schedule_value + 'Z');
+          if (isNaN(approxUtc.getTime())) {
             logger.warn(
               { scheduleValue: data.schedule_value },
               'Invalid timestamp',
             );
             break;
           }
-          nextRun = date.toISOString();
+          // 'sv' locale produces ISO-like "YYYY-MM-DD HH:MM:SS" in the target timezone
+          const tzDisplay = new Intl.DateTimeFormat('sv', {
+            timeZone: TIMEZONE,
+          }).format(approxUtc);
+          const tzAsUtc = new Date(tzDisplay.replace(' ', 'T') + 'Z');
+          const offsetMs = tzAsUtc.getTime() - approxUtc.getTime();
+          nextRun = new Date(approxUtc.getTime() - offsetMs).toISOString();
         }
 
         const taskId =
@@ -395,6 +404,18 @@ export async function processTaskIpc(
             const ms = parseInt(updatedTask.schedule_value, 10);
             if (!isNaN(ms) && ms > 0) {
               updates.next_run = new Date(Date.now() + ms).toISOString();
+            }
+          } else if (updatedTask.schedule_type === 'once') {
+            const approxUtc = new Date(updatedTask.schedule_value + 'Z');
+            if (!isNaN(approxUtc.getTime())) {
+              const tzDisplay = new Intl.DateTimeFormat('sv', {
+                timeZone: TIMEZONE,
+              }).format(approxUtc);
+              const tzAsUtc = new Date(tzDisplay.replace(' ', 'T') + 'Z');
+              const offsetMs = tzAsUtc.getTime() - approxUtc.getTime();
+              updates.next_run = new Date(
+                approxUtc.getTime() - offsetMs,
+              ).toISOString();
             }
           }
         }
