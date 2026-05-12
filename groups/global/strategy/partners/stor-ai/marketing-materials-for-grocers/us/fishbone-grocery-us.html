@@ -127,7 +127,14 @@
       </g>
     </svg>
   </div>
-  <div class="topbar-meta">April 2026</div>
+  <div class="topbar-meta" id="topbar-date">April 2026</div>
+  <script>
+    (function () {
+      var now = new Date();
+      var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      document.getElementById('topbar-date').textContent = months[now.getMonth()] + ' ' + now.getFullYear();
+    })();
+  </script>
 </div>
 
 <!-- THESIS -->
@@ -218,11 +225,11 @@
     <p><strong>We start where the momentum is strongest: ChatGPT Apps, the most mature instance of this shift</strong>, expanding across other AI surfaces as they emerge.</p>
     <div class="team-row">
       <div class="team-person">
-        <div class="team-name"><strong>Ohav Peri</strong>, CEO <a href="https://www.linkedin.com/in/ohav-peri-207423198/" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a></div>
+        <div class="team-name"><strong>Ohav Peri</strong> CEO <a href="https://www.linkedin.com/in/ohav-peri-207423198/" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a></div>
         <div class="team-bio">AI &amp; data science &middot; built AI agents at Cybereason &middot; veteran of elite IDF intelligence units (Unit 81) &middot; Zell Entrepreneurship Program alumnus</div>
       </div>
       <div class="team-person">
-        <div class="team-name"><strong>Avishay Matayev</strong>, CTO <a href="https://www.linkedin.com/in/avishayx/" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a></div>
+        <div class="team-name"><strong>Avishay Matayev</strong> CTO <a href="https://www.linkedin.com/in/avishayx/" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a></div>
         <div class="team-bio">Cybersecurity &amp; systems architecture &middot; building AI agents, previously at Finaloop &middot; veteran of elite IDF intelligence units (Unit 8200)</div>
       </div>
     </div>
