@@ -17,21 +17,28 @@ Specifically:
 
 ---
 
-## 📅 This Week (2026-04-27 → 2026-05-02)
+## 📅 This Week (2026-05-11 → 2026-05-16)
 
-**Theme:** Signal generation — parallel experiments, real data by Friday
+**Theme:** First signals — run the experiments, read the data.
 
-Framework: *Goals = binary weekly commitments (start crazy, work backwards). Assumptions = risky beliefs that accumulate signal over time, evaluated separately at retro.*
+Framework: *Goals = binary weekly commitments, evaluable yes/no by Friday noon. Assumptions = risky beliefs that accumulate signal over time, evaluated at retro.*
 
-On path of **Fitbot (WoZ)** — a successful week is such that by Friday noon we have ≥60% of leads still active on day 5, meaning they replied to at least one check-in that day. Owner: Avishay → FB-209 (under FB-213)
+On path of **FitBot** — a successful week is such that by Friday noon we have 10 active users meeting the engagement bar (>10 user messages sent by the user, user:bot message ratio ≥ 0.8). Owner: Avishay. Pre-launch checklist must be closed early in the week or this goal is unreachable.
 
-On path of **stor.ai / Israeli grocery** — a successful week is such that by Friday noon we have a meeting scheduled with at least one Israeli grocer for at least next week. Owner: Morris + Ohav nudge → FB-195
+On path of **Wedge experiment** — a successful week is such that by Friday noon the Meta campaign has been live for ≥5 days AND we have real data on impressions, clicks, and leads — enough to evaluate the channel. Positive or negative signal both count. Owner: Ohav (campaign live by Monday EOD).
 
-On path of **new verticals beyond grocery** — a successful week is such that by Friday noon we have conviction — one way or another — on whether the stor.ai distribution model is replicable outside grocery. Finding one equivalent channel OR concluding none exists are both valid signals. Owner: Ohav → FB-210 (under FB-128)
+On path of **Stor.ai / ChatGPT apps channel** — two parts:
+- *Controllable:* Written advisory proposal for Morris (milestones and/or equity terms) ready by Friday EOD. Owner: Ohav.
+- *External (track, not week-success criterion):* Morris intro to Tiv Taam happens, call gets scheduled.
 
-On path of **assumption #1 / Polonio** — a successful week is such that by Friday noon the experiment is running, products are updated on GMC, and we have a defined daily monitoring checklist for the coming weeks. Owner: Avishay → FB-211 (under FB-61)
+On path of **AI Storefront Management Platform** — a successful week is such that by Friday noon we have a written VC fundability one-pager (a16z/Sequoia framing), informed by at least one conversation with someone who can give a knowledgeable read (founder who raised, angel, or equivalent). Owner: Avishay (Ohav closely involved in evaluation).
 
-On path of **new Meta experiment (different vertical)** — a successful week is such that by Friday noon ads are live, leads are coming in, and we have reply rate data on the first WoZ onboarding message sent to new leads. Owner: Ohav → FB-212 (under FB-214)
+On path of **Heila** — a successful week is such that after Thursday's 3pm call, at least one of the following happened unprompted: (a) they named customers beyond Dominos, (b) they asked a forward-looking "what would this look like for us?" question, (c) they proposed a concrete next step (demo, pilot, intro to someone internal), or (d) they shared operational details (pricing, vendors, roadmap) they'd only share with genuine interest. Owner: Ohav.
+
+**Enabler tasks (important, not path-success criteria):**
+- Angels list — warm-connection-mapped list of targets, ready to activate.
+- Agent 11 — Ohav contacts the sports investor this week + checks engagement of existing enrolled users. No kill/continue decision required yet.
+- Babysense MNDA — chase it.
 
 ---
 
@@ -44,6 +51,7 @@ On path of **new Meta experiment (different vertical)** — a successful week is
 | 2026-04-05 | Knots/DAFNI experiments + Stor one-pager + Google/OpenAI insider calls | Pitch deck (FB-185) and one-pager (FB-186) done; Morris materials sent; Dean Greenberg call completed; DAFNI experiment plan sent for approval (FB-184 in progress) |
 | 2026-04-12 | Exploration + experimentation week — ChatGPT apps channel, grocer pipeline, Danny eval | FB-185 ✅ FB-186 ✅; app submission hit OpenAI limbo (FB-192 canceled); FB-184 in progress; week framed as rapid idea-to-experiment cycling |
 | 2026-04-19 | Pipeline momentum + channel validation + deal clarity | FB-195 in progress; FB-200 in progress; FB-197 (WoZ) launched; FB-198 (chess) done; FB-202 Polonio follow-up in progress |
+| 2026-04-27 | Signal generation — parallel experiments, real data by Friday | FitBot WoZ retention gate (FB-209) dropped; NanoClaw agent shipped to VM; soccer experiment (FB-224) creative done; Yuval landing page (FB-223) shipped; Or Git (Grove Ventures) meeting done |
 
 ---
 
