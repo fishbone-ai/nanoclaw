@@ -95,6 +95,7 @@ assert resp["ok"], resp
 Format:
 ```
 *Meeting: <title>* | YYYY-MM-DD
+_<filename-stem>_ | <https://github.com/fishbone-ai/nanoclaw/blob/main/groups/global/calls/meetings/<filename>.md|Transcription>
 
 *Participants*
 • Name 1, Name 2 (⚠️ Speaker 3 identity unclear — who is this?)
