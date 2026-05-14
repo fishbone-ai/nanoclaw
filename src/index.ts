@@ -320,7 +320,11 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
 
   // Fallback: clear typing indicator if no output was sent (error path)
   if (!outputSentToUser) {
-    await channel.setTyping?.(chatJid, false, activeReplyTarget[chatJid] ?? triggerMessageId);
+    await channel.setTyping?.(
+      chatJid,
+      false,
+      activeReplyTarget[chatJid] ?? triggerMessageId,
+    );
   }
   delete activeReplyTarget[chatJid];
   if (idleTimer) clearTimeout(idleTimer);
@@ -351,11 +355,16 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
 function findClaudeMemPluginRoot(): string | null {
   const bases = [
     '/data/claude-home/plugins/cache/thedotmack/claude-mem',
-    path.join(process.env.HOME || '/root', '.claude/plugins/cache/thedotmack/claude-mem'),
+    path.join(
+      process.env.HOME || '/root',
+      '.claude/plugins/cache/thedotmack/claude-mem',
+    ),
   ];
   for (const base of bases) {
     if (!fs.existsSync(base)) continue;
-    const versions = fs.readdirSync(base).filter((v) => /^\d+\.\d+\.\d+$/.test(v));
+    const versions = fs
+      .readdirSync(base)
+      .filter((v) => /^\d+\.\d+\.\d+$/.test(v));
     if (!versions.length) continue;
     const latest = versions.sort((a, b) => {
       const pa = a.split('.').map(Number);
@@ -639,7 +648,8 @@ async function startMessageLoop(): Promise<void> {
                       const m = groupMessages[i];
                       if (
                         pat.test(m.content.trim()) &&
-                        (m.is_from_me || isTriggerAllowed(chatJid, m.sender, cfg))
+                        (m.is_from_me ||
+                          isTriggerAllowed(chatJid, m.sender, cfg))
                       ) {
                         return m;
                       }
