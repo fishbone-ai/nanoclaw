@@ -104,7 +104,8 @@ export class SlackChannel implements Channel {
           ? [msgAny.file]
           : undefined;
       const audioFile = files?.find((f) => f.mimetype?.startsWith('audio/'));
-      const imageFiles = files?.filter((f) => f.mimetype?.startsWith('image/')) ?? [];
+      const imageFiles =
+        files?.filter((f) => f.mimetype?.startsWith('image/')) ?? [];
       if (!msg.text && !audioFile && imageFiles.length === 0) return;
 
       const jid = `slack:${msg.channel}`;
@@ -223,11 +224,17 @@ export class SlackChannel implements Channel {
             : `[Voice message]: ${transcription}`;
         }
       }
-      let downloadedImages: Array<{ data: string; mimeType: string; filename?: string }> = [];
+      let downloadedImages: Array<{
+        data: string;
+        mimeType: string;
+        filename?: string;
+      }> = [];
       if (imageFiles.length > 0 && !isBotMessage) {
         downloadedImages = await this.downloadImageFiles(imageFiles);
-        if (downloadedImages.length === 0 && !content) {
-          content = `[image attachment — download failed]`;
+        if (downloadedImages.length === 0) {
+          content = content
+            ? `${content}\n[image attachment — download failed]`
+            : `[image attachment — download failed]`;
         }
       }
 
@@ -251,7 +258,8 @@ export class SlackChannel implements Channel {
         reply_to_message_id: isThreadReply ? threadTs : undefined,
         reply_to_message_content: replyToContent,
         reply_to_sender_name: replyToSenderName,
-        imageAttachments: downloadedImages.length > 0 ? downloadedImages : undefined,
+        imageAttachments:
+          downloadedImages.length > 0 ? downloadedImages : undefined,
       });
     });
   }
@@ -334,10 +342,19 @@ export class SlackChannel implements Channel {
   }
 
   private async downloadImageFiles(
-    files: Array<{ id: string; mimetype?: string; url_private_download?: string; name?: string }>,
+    files: Array<{
+      id: string;
+      mimetype?: string;
+      url_private_download?: string;
+      name?: string;
+    }>,
   ): Promise<Array<{ data: string; mimeType: string; filename?: string }>> {
     const env = readEnvFile(['SLACK_BOT_TOKEN']);
-    const results: Array<{ data: string; mimeType: string; filename?: string }> = [];
+    const results: Array<{
+      data: string;
+      mimeType: string;
+      filename?: string;
+    }> = [];
 
     for (const file of files) {
       try {
@@ -371,11 +388,18 @@ export class SlackChannel implements Channel {
           filename: file.name,
         });
         logger.info(
-          { fileId: file.id, mimeType: file.mimetype, bytes: buffer.byteLength },
+          {
+            fileId: file.id,
+            mimeType: file.mimetype,
+            bytes: buffer.byteLength,
+          },
           'Slack: downloaded image',
         );
       } catch (err) {
-        logger.warn({ err, fileId: file.id }, 'Slack: failed to download image');
+        logger.warn(
+          { err, fileId: file.id },
+          'Slack: failed to download image',
+        );
       }
     }
 

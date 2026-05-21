@@ -809,8 +809,12 @@ async function main(): Promise<void> {
         }
       }
       // Save image attachments to group workspace and embed container paths in content
-      if (msg.imageAttachments?.length && registeredGroups[chatJid]?.folder) {
-        saveImageAttachments(msg, registeredGroups[chatJid].folder);
+      if (msg.imageAttachments?.length) {
+        if (registeredGroups[chatJid]?.folder) {
+          saveImageAttachments(msg, registeredGroups[chatJid].folder);
+        } else {
+          msg.imageAttachments = undefined;
+        }
       }
 
       storeMessage(msg);
