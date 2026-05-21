@@ -19,12 +19,17 @@ export function saveImageAttachments(
   if (!msg.imageAttachments?.length) return;
 
   const imagesDir = path.join(resolveGroupFolderPath(groupFolder), 'images');
-  fs.mkdirSync(imagesDir, { recursive: true });
+  try {
+    fs.mkdirSync(imagesDir, { recursive: true });
+  } catch (err) {
+    logger.warn({ err, imagesDir }, 'Failed to create images directory');
+    return;
+  }
 
+  const safeId = msg.id.replace(/\./g, '-');
   for (let i = 0; i < msg.imageAttachments.length; i++) {
     const attachment = msg.imageAttachments[i];
     const ext = MIME_TO_EXT[attachment.mimeType] ?? 'bin';
-    const safeId = msg.id.replace(/\./g, '-');
     const filename = `slack-image-${safeId}-${i}.${ext}`;
     const filepath = path.join(imagesDir, filename);
 
