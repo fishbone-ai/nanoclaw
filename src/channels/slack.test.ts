@@ -50,11 +50,20 @@ vi.mock('@slack/bolt', () => ({
           channels: [],
           response_metadata: {},
         }),
+        replies: vi.fn().mockResolvedValue({ messages: [] }),
+        info: vi.fn().mockResolvedValue({ channel: { name: 'test' } }),
+      },
+      files: {
+        info: vi.fn().mockResolvedValue({ file: {} }),
       },
       users: {
         info: vi.fn().mockResolvedValue({
           user: { real_name: 'Alice Smith', name: 'alice' },
         }),
+      },
+      reactions: {
+        add: vi.fn().mockResolvedValue(undefined),
+        remove: vi.fn().mockResolvedValue(undefined),
       },
     };
 
@@ -481,6 +490,161 @@ describe('SlackChannel', () => {
       await triggerMessageEvent(event);
 
       expect(opts.onMessage).toHaveBeenCalled();
+    });
+  });
+
+  // --- image handling ---
+
+  describe('image handling', () => {
+    beforeEach(() => {
+      vi.stubGlobal('fetch', vi.fn());
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('attaches downloaded image to message', async () => {
+      const imageBytes = Buffer.from('fake-png-data');
+      vi.mocked(global.fetch as any).mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => imageBytes.buffer.slice(imageBytes.byteOffset, imageBytes.byteOffset + imageBytes.byteLength),
+      });
+
+      const opts = createTestOpts();
+      const channel = new SlackChannel(opts);
+      await channel.connect();
+
+      await triggerMessageEvent({
+        ...createMessageEvent({ text: undefined as any }),
+        subtype: 'file_share',
+        files: [
+          {
+            id: 'F123',
+            mimetype: 'image/png',
+            url_private_download: 'https://files.slack.com/img.png',
+          },
+        ],
+      } as any);
+
+      expect(opts.onMessage).toHaveBeenCalledWith(
+        'slack:C0123456789',
+        expect.objectContaining({
+          imageAttachments: [
+            expect.objectContaining({
+              mimeType: 'image/png',
+              data: imageBytes.toString('base64'),
+            }),
+          ],
+        }),
+      );
+    });
+
+    it('delivers image-only message with no text', async () => {
+      const imageBytes = Buffer.from('fake-jpg-data');
+      vi.mocked(global.fetch as any).mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => imageBytes.buffer.slice(imageBytes.byteOffset, imageBytes.byteOffset + imageBytes.byteLength),
+      });
+
+      const opts = createTestOpts();
+      const channel = new SlackChannel(opts);
+      await channel.connect();
+
+      await triggerMessageEvent({
+        ...createMessageEvent({ text: undefined as any }),
+        subtype: 'file_share',
+        files: [
+          {
+            id: 'F456',
+            mimetype: 'image/jpeg',
+            url_private_download: 'https://files.slack.com/img.jpg',
+          },
+        ],
+      } as any);
+
+      expect(opts.onMessage).toHaveBeenCalled();
+    });
+
+    it('appends failure note to content when image download fails', async () => {
+      vi.mocked(global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 403,
+      });
+
+      const opts = createTestOpts();
+      const channel = new SlackChannel(opts);
+      await channel.connect();
+
+      await triggerMessageEvent({
+        ...createMessageEvent({ text: undefined as any }),
+        subtype: 'file_share',
+        files: [
+          {
+            id: 'F789',
+            mimetype: 'image/jpeg',
+            url_private_download: 'https://files.slack.com/fail.jpg',
+          },
+        ],
+      } as any);
+
+      expect(opts.onMessage).toHaveBeenCalledWith(
+        'slack:C0123456789',
+        expect.objectContaining({
+          content: expect.stringContaining('[image attachment — download failed]'),
+        }),
+      );
+    });
+
+    it('handles multiple images in one message', async () => {
+      const imageBytes = Buffer.from('img');
+      vi.mocked(global.fetch as any).mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => imageBytes.buffer.slice(imageBytes.byteOffset, imageBytes.byteOffset + imageBytes.byteLength),
+      });
+
+      const opts = createTestOpts();
+      const channel = new SlackChannel(opts);
+      await channel.connect();
+
+      await triggerMessageEvent({
+        ...createMessageEvent({ text: 'Check these out' }),
+        files: [
+          { id: 'F1', mimetype: 'image/png', url_private_download: 'https://files.slack.com/a.png' },
+          { id: 'F2', mimetype: 'image/jpeg', url_private_download: 'https://files.slack.com/b.jpg' },
+        ],
+      } as any);
+
+      expect(opts.onMessage).toHaveBeenCalledWith(
+        'slack:C0123456789',
+        expect.objectContaining({
+          imageAttachments: expect.arrayContaining([
+            expect.objectContaining({ mimeType: 'image/png' }),
+            expect.objectContaining({ mimeType: 'image/jpeg' }),
+          ]),
+        }),
+      );
+    });
+
+    it('skips non-image files silently', async () => {
+      const opts = createTestOpts();
+      const channel = new SlackChannel(opts);
+      await channel.connect();
+
+      // PDF — not an image
+      await triggerMessageEvent({
+        ...createMessageEvent({ text: 'Here is a doc' }),
+        files: [
+          { id: 'F_PDF', mimetype: 'application/pdf', url_private_download: 'https://files.slack.com/doc.pdf' },
+        ],
+      } as any);
+
+      expect(opts.onMessage).toHaveBeenCalledWith(
+        'slack:C0123456789',
+        expect.objectContaining({
+          imageAttachments: undefined,
+        }),
+      );
     });
   });
 

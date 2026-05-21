@@ -91,6 +91,7 @@ export class SlackChannel implements Channel {
         id: string;
         mimetype?: string;
         url_private_download?: string;
+        name?: string;
       };
       const msgAny = msg as {
         files?: SlackFileRef[];
@@ -103,7 +104,8 @@ export class SlackChannel implements Channel {
           ? [msgAny.file]
           : undefined;
       const audioFile = files?.find((f) => f.mimetype?.startsWith('audio/'));
-      if (!msg.text && !audioFile) return;
+      const imageFiles = files?.filter((f) => f.mimetype?.startsWith('image/')) ?? [];
+      if (!msg.text && !audioFile && imageFiles.length === 0) return;
 
       const jid = `slack:${msg.channel}`;
       const timestamp = new Date(parseFloat(msg.ts) * 1000).toISOString();
@@ -221,6 +223,14 @@ export class SlackChannel implements Channel {
             : `[Voice message]: ${transcription}`;
         }
       }
+      let downloadedImages: Array<{ data: string; mimeType: string; filename?: string }> = [];
+      if (imageFiles.length > 0 && !isBotMessage) {
+        downloadedImages = await this.downloadImageFiles(imageFiles);
+        if (downloadedImages.length === 0 && !content) {
+          content = `[image attachment — download failed]`;
+        }
+      }
+
       if (!isBotMessage) {
         const shouldTrigger =
           !isGroup || isMentioned || (isThreadReply && botIsInThread);
@@ -241,6 +251,7 @@ export class SlackChannel implements Channel {
         reply_to_message_id: isThreadReply ? threadTs : undefined,
         reply_to_message_content: replyToContent,
         reply_to_sender_name: replyToSenderName,
+        imageAttachments: downloadedImages.length > 0 ? downloadedImages : undefined,
       });
     });
   }
@@ -320,6 +331,55 @@ export class SlackChannel implements Channel {
       logger.warn({ err }, 'Slack: failed to transcribe voice message');
       return undefined;
     }
+  }
+
+  private async downloadImageFiles(
+    files: Array<{ id: string; mimetype?: string; url_private_download?: string; name?: string }>,
+  ): Promise<Array<{ data: string; mimeType: string; filename?: string }>> {
+    const env = readEnvFile(['SLACK_BOT_TOKEN']);
+    const results: Array<{ data: string; mimeType: string; filename?: string }> = [];
+
+    for (const file of files) {
+      try {
+        let downloadUrl = file.url_private_download;
+        if (!downloadUrl) {
+          const info = await this.app.client.files.info({ file: file.id });
+          downloadUrl = (info.file as { url_private_download?: string })
+            ?.url_private_download;
+        }
+        if (!downloadUrl) {
+          logger.warn({ fileId: file.id }, 'Slack: no download URL for image');
+          continue;
+        }
+
+        const resp = await fetch(downloadUrl, {
+          headers: { Authorization: `Bearer ${env.SLACK_BOT_TOKEN}` },
+        });
+        if (!resp.ok) {
+          logger.warn(
+            { status: resp.status, fileId: file.id },
+            'Slack: image download failed',
+          );
+          continue;
+        }
+
+        const buffer = await resp.arrayBuffer();
+        const data = Buffer.from(buffer).toString('base64');
+        results.push({
+          data,
+          mimeType: file.mimetype ?? 'image/jpeg',
+          filename: file.name,
+        });
+        logger.info(
+          { fileId: file.id, mimeType: file.mimetype, bytes: buffer.byteLength },
+          'Slack: downloaded image',
+        );
+      } catch (err) {
+        logger.warn({ err, fileId: file.id }, 'Slack: failed to download image');
+      }
+    }
+
+    return results;
   }
 
   async connect(): Promise<void> {
