@@ -67,6 +67,7 @@ import { startSessionCleanup } from './session-cleanup.js';
 import { startSchedulerLoop } from './task-scheduler.js';
 import { Channel, NewMessage, RegisteredGroup } from './types.js';
 import { logger } from './logger.js';
+import { saveImageAttachments } from './image-attachments.js';
 
 // Re-export for backwards compatibility during refactor
 export { escapeXml, formatMessages } from './router.js';
@@ -807,6 +808,11 @@ async function main(): Promise<void> {
           return;
         }
       }
+      // Save image attachments to group workspace and embed container paths in content
+      if (msg.imageAttachments?.length && registeredGroups[chatJid]?.folder) {
+        saveImageAttachments(msg, registeredGroups[chatJid].folder);
+      }
+
       storeMessage(msg);
     },
     onChatMetadata: (
