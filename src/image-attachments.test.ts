@@ -67,7 +67,9 @@ describe('saveImageAttachments', () => {
     ] as const) {
       fs.rmSync(tmpBase, { recursive: true, force: true });
       const msg = makeMsg({
-        imageAttachments: [{ data: Buffer.from('x').toString('base64'), mimeType }],
+        imageAttachments: [
+          { data: Buffer.from('x').toString('base64'), mimeType },
+        ],
       });
       saveImageAttachments(msg, 'test-channel');
       const files = fs.readdirSync('/tmp/test-groups/test-channel/images');
@@ -87,7 +89,9 @@ describe('saveImageAttachments', () => {
 
     const files = fs.readdirSync('/tmp/test-groups/test-channel/images');
     expect(files).toHaveLength(2);
-    const pathLines = msg.content.split('\n').filter((l) => l.startsWith('[Image at'));
+    const pathLines = msg.content
+      .split('\n')
+      .filter((l) => l.startsWith('[Image at'));
     expect(pathLines).toHaveLength(2);
   });
 

@@ -43,7 +43,7 @@ export interface RegisteredGroup {
 }
 
 export interface ImageAttachment {
-  data: string;     // base64-encoded image bytes
+  data: string; // base64-encoded image bytes
   mimeType: string; // e.g. 'image/jpeg', 'image/png', 'image/gif', 'image/webp'
   filename?: string;
 }
