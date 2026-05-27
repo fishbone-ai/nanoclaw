@@ -4,5 +4,5 @@
     "avishay": "1WID47DofY4bmXL-2oykKIJnqXIQYjqTS"
   },
   "output_dir": "calls/meetings",
-  "model": "gemini-2.5-pro"
+  "model": "gemini-3.1-pro-preview"
 }

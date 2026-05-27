@@ -298,7 +298,7 @@ def transcribe_audio(
     from google.genai import types
     from google.api_core.exceptions import ServiceUnavailable, ResourceExhausted
 
-    FALLBACK_MODELS = [model, "gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash"]
+    FALLBACK_MODELS = [model, "gemini-3.1-pro-preview", "gemini-3.5-flash"]
     seen: set = set()
     model_chain = [m for m in FALLBACK_MODELS if not (m in seen or seen.add(m))]  # type: ignore[func-returns-value]
 
