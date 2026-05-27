@@ -439,6 +439,9 @@ async function runQuery(
     prompt: stream,
     options: {
       cwd: '/workspace/group',
+      model: containerInput.groupFolder.startsWith('slack_')
+        ? 'claude-sonnet-4-6'
+        : undefined,
       additionalDirectories: extraDirs.length > 0 ? extraDirs : undefined,
       resume: sessionId,
       resumeSessionAt: resumeAt,
