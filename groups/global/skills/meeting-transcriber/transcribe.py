@@ -233,6 +233,38 @@ def extract_audio(video_path: Path) -> Path:
     return audio_path
 
 
+# Recordings longer than this threshold are split into chunks before transcription.
+# Gemini hits its output token limit on single calls for long audio, causing truncation.
+CHUNK_THRESHOLD_SECONDS = 600   # 10 minutes (lowered from 15 — recordings under 15min were hitting MAX_TOKENS)
+CHUNK_DURATION_SECONDS  = 480   # 8 minutes per chunk (lowered from 14 for headroom)
+
+
+def split_audio_into_chunks(audio_path: Path, chunk_duration: int = CHUNK_DURATION_SECONDS) -> list[Path]:
+    """Split an MP3 into fixed-duration chunks. Returns list of chunk paths."""
+    duration = get_duration_seconds(audio_path)
+    if duration is None:
+        raise RuntimeError(f"Could not determine duration of {audio_path}")
+    n_chunks = max(1, int(duration / chunk_duration) + (1 if duration % chunk_duration else 0))
+    chunks = []
+    for i in range(n_chunks):
+        start = i * chunk_duration
+        chunk_path = audio_path.parent / f"{audio_path.stem}-chunk{i+1}.mp3"
+        result = subprocess.run(
+            [
+                "ffmpeg", "-y", "-i", str(audio_path),
+                "-ss", str(start), "-t", str(chunk_duration),
+                "-acodec", "libmp3lame", "-q:a", "4", str(chunk_path),
+                "-loglevel", "error",
+            ],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"ffmpeg chunk split failed: {result.stderr[-500:]}")
+        if chunk_path.exists() and chunk_path.stat().st_size > 0:
+            chunks.append(chunk_path)
+    return chunks
+
+
 # ---------------------------------------------------------------------------
 # Gemini transcription
 # ---------------------------------------------------------------------------
@@ -286,37 +318,37 @@ RESPONSE_SCHEMA = {
 }
 
 
-def transcribe_audio(
-    file_path: Path,
-    api_key: str,
-    model: str,
-    slack_token: str | None = None,
-    thread_ts: str | None = None,
-    owner: str | None = None,
+def _wait_for_active(client, uploaded_file, timeout_polls: int = 30) -> None:
+    """Poll until a Gemini uploaded file reaches ACTIVE state."""
+    import time
+    for _ in range(timeout_polls):
+        info = client.files.get(name=uploaded_file.name)
+        if info.state.name == "ACTIVE":
+            return
+        elif info.state.name == "FAILED":
+            raise RuntimeError(f"Gemini file processing failed: {uploaded_file.name}")
+        time.sleep(10)
+    raise RuntimeError(f"Timed out waiting for Gemini file: {uploaded_file.name}")
+
+
+class _MaxTokensError(RuntimeError):
+    """Raised when Gemini hits its output token limit (causes silent mid-sentence truncation in JSON mode)."""
+    pass
+
+
+def _transcribe_single_file(
+    client,
+    uploaded_file,
+    model_chain: list[str],
+    owner_hint: str,
+    chunk_label: str,
+    slack_token: str | None,
+    thread_ts: str | None,
 ) -> str:
+    """Run generate_content on a single already-uploaded Gemini file, with retries."""
     import time
     from google.genai import types
     from google.api_core.exceptions import ServiceUnavailable, ResourceExhausted
-
-    FALLBACK_MODELS = [model, "gemini-3.1-pro-preview", "gemini-3.5-flash"]
-    seen: set = set()
-    model_chain = [m for m in FALLBACK_MODELS if not (m in seen or seen.add(m))]  # type: ignore[func-returns-value]
-
-    client = genai.Client(api_key=api_key)
-
-    audio_path = extract_audio(file_path)
-
-    uploaded = client.files.upload(file=audio_path, config={"mime_type": "audio/mpeg"})
-
-    for _ in range(30):
-        file_info = client.files.get(name=uploaded.name)
-        if file_info.state.name == "ACTIVE":
-            break
-        elif file_info.state.name == "FAILED":
-            raise RuntimeError(f"Gemini file processing failed: {uploaded.name}")
-        time.sleep(10)
-    else:
-        raise RuntimeError(f"Timed out waiting for Gemini file: {uploaded.name}")
 
     def _is_retryable(exc: Exception) -> bool:
         if isinstance(exc, (ServiceUnavailable, ResourceExhausted)):
@@ -336,32 +368,41 @@ def transcribe_audio(
             if attempt > 0:
                 wait = 30 * (2 ** (attempt - 1))
                 slack_notify(
-                    f"⏳ Gemini overloaded — retrying in {wait}s (model: `{attempt_model}`)...",
+                    f"⏳ Gemini overloaded — retrying {chunk_label} in {wait}s (model: `{attempt_model}`)...",
                     slack_token, thread_ts=thread_ts,
                 )
                 time.sleep(wait)
             try:
-                owner_hint = ""
-                if owner:
-                    owner_display = {"avishay": "אבישי", "ohav": "אוהב"}.get(owner.lower(), owner)
-                    owner_hint = (
-                        f"\n\n**רמז על המשתתפים:** ההקלטה נמצאת בתיקיית Drive של {owner_display}. "
-                        f"השתמש בזה כרמז לזיהוי דוברים."
-                    )
                 response = client.models.generate_content(
                     model=attempt_model,
-                    contents=[uploaded, SYSTEM_INSTRUCTIONS + owner_hint],
+                    contents=[uploaded_file, SYSTEM_INSTRUCTIONS + owner_hint],
                     config=types.GenerateContentConfig(
                         response_mime_type="application/json",
                         response_schema=RESPONSE_SCHEMA,
                     ),
                 )
-                result = json.loads(response.text)
-                if attempt_model != model:
-                    slack_notify(
-                        f"ℹ️ Used fallback model `{attempt_model}`.",
-                        slack_token, thread_ts=thread_ts,
+                # Check for None response (safety filters / empty output)
+                if response.text is None:
+                    raise RuntimeError(
+                        f"Gemini returned None response for {chunk_label} "
+                        f"(candidates: {response.candidates!r})"
                     )
+                # Check for MAX_TOKENS — JSON mode silently truncates string fields,
+                # so json.loads() succeeds but the transcript is cut off mid-sentence.
+                if response.candidates:
+                    finish_reason = getattr(response.candidates[0], "finish_reason", None)
+                    if finish_reason is not None:
+                        reason_name = getattr(finish_reason, "name", str(finish_reason))
+                        if reason_name == "MAX_TOKENS":
+                            token_count = getattr(
+                                getattr(response, "usage_metadata", None),
+                                "candidates_token_count", "?"
+                            )
+                            raise _MaxTokensError(
+                                f"Gemini hit MAX_TOKENS for {chunk_label} "
+                                f"({token_count} output tokens) — transcript would be truncated"
+                            )
+                result = json.loads(response.text)
                 return result["תמליל"]
             except Exception as e:
                 if _is_retryable(e):
@@ -369,11 +410,106 @@ def transcribe_audio(
                     continue
                 raise
         slack_notify(
-            f"⚠️ Model `{attempt_model}` exhausted retries — trying next fallback...",
+            f"⚠️ Model `{attempt_model}` exhausted retries for {chunk_label} — trying next fallback...",
             slack_token, thread_ts=thread_ts,
         )
+    raise RuntimeError(f"All Gemini models failed for {chunk_label}. Last error: {last_error}")
 
-    raise RuntimeError(f"All Gemini models failed. Last error: {last_error}")
+
+def transcribe_audio(
+    file_path: Path,
+    api_key: str,
+    model: str,
+    slack_token: str | None = None,
+    thread_ts: str | None = None,
+    owner: str | None = None,
+) -> str:
+    """Transcribe an audio/video file.
+
+    For recordings longer than CHUNK_THRESHOLD_SECONDS, the audio is split into
+    ~14-minute chunks and each chunk is transcribed separately to avoid hitting
+    Gemini's output token limit (which causes silent mid-sentence truncation).
+    """
+    FALLBACK_MODELS = [model, "gemini-flash-latest", "gemini-3.5-flash"]
+    seen: set = set()
+    model_chain = [m for m in FALLBACK_MODELS if not (m in seen or seen.add(m))]  # type: ignore[func-returns-value]
+
+    client = genai.Client(api_key=api_key)
+
+    audio_path = extract_audio(file_path)
+    duration = get_duration_seconds(audio_path)
+
+    owner_hint = ""
+    if owner:
+        owner_display = {"avishay": "אבישי", "ohav": "אוהב"}.get(owner.lower(), owner)
+        owner_hint = (
+            f"\n\n**רמז על המשתתפים:** ההקלטה נמצאת בתיקיית Drive של {owner_display}. "
+            f"השתמש בזה כרמז לזיהוי דוברים."
+        )
+
+    use_chunks = duration is not None and duration > CHUNK_THRESHOLD_SECONDS
+    if use_chunks:
+        chunks = split_audio_into_chunks(audio_path, CHUNK_DURATION_SECONDS)
+        n = len(chunks)
+        slack_notify(
+            f"⚙️ Long recording ({format_duration(duration)}) — splitting into {n} chunks for transcription.",
+            slack_token, thread_ts=thread_ts,
+        )
+        # Upload all chunks first
+        uploaded_chunks = []
+        for i, chunk_path in enumerate(chunks):
+            up = client.files.upload(file=chunk_path, config={"mime_type": "audio/mpeg"})
+            uploaded_chunks.append(up)
+        # Wait for all to be ACTIVE
+        for up in uploaded_chunks:
+            _wait_for_active(client, up)
+        # Transcribe each chunk
+        parts = []
+        for i, (up, chunk_path) in enumerate(zip(uploaded_chunks, chunks)):
+            label = f"chunk {i+1}/{n}"
+            slack_notify(f"📝 Transcribing {label}...", slack_token, thread_ts=thread_ts)
+            text = _transcribe_single_file(
+                client, up, model_chain, owner_hint, label, slack_token, thread_ts
+            )
+            parts.append(text)
+            chunk_path.unlink(missing_ok=True)
+        return "\n\n".join(parts)
+    else:
+        uploaded = client.files.upload(file=audio_path, config={"mime_type": "audio/mpeg"})
+        _wait_for_active(client, uploaded)
+        try:
+            return _transcribe_single_file(
+                client, uploaded, model_chain, owner_hint, "full recording", slack_token, thread_ts
+            )
+        except _MaxTokensError as exc:
+            # Gemini hit its output limit even on a "short" recording — fall back to chunking.
+            slack_notify(
+                f"⚠️ MAX_TOKENS on full recording ({format_duration(duration or 0)}) — "
+                f"switching to chunked transcription automatically...",
+                slack_token, thread_ts=thread_ts,
+            )
+            chunks = split_audio_into_chunks(audio_path, CHUNK_DURATION_SECONDS)
+            n = len(chunks)
+            slack_notify(
+                f"⚙️ Re-splitting into {n} chunks for transcription.",
+                slack_token, thread_ts=thread_ts,
+            )
+            uploaded_chunks = []
+            for chunk_path in chunks:
+                up = client.files.upload(file=chunk_path, config={"mime_type": "audio/mpeg"})
+                uploaded_chunks.append(up)
+            for up in uploaded_chunks:
+                _wait_for_active(client, up)
+            parts = []
+            for i, (up, chunk_path) in enumerate(zip(uploaded_chunks, chunks)):
+                label = f"chunk {i+1}/{n} (rechunked)"
+                slack_notify(f"📝 Transcribing {label}...", slack_token, thread_ts=thread_ts)
+                text = _transcribe_single_file(
+                    client, up, model_chain, owner_hint, label, slack_token, thread_ts
+                )
+                parts.append(text)
+                chunk_path.unlink(missing_ok=True)
+            return "\n\n".join(parts)
 
 
 # ---------------------------------------------------------------------------
@@ -508,6 +644,35 @@ def main() -> None:
                 slack_token, thread_ts=thread_ts, broadcast=True,
             )
             continue
+
+    # Commit and push new transcripts to git
+    if new_transcripts:
+        try:
+            project_dir = Path("/workspace/project")
+            subprocess.run(
+                ["git", "add", "groups/global/calls/meetings/"],
+                cwd=project_dir, check=True, capture_output=True,
+            )
+            commit_msg = "feat(transcription): auto-transcribe " + ", ".join(
+                Path(p).stem for p, _ in new_transcripts
+            )
+            subprocess.run(
+                ["git", "commit", "-m", commit_msg],
+                cwd=project_dir, check=True, capture_output=True,
+            )
+            subprocess.run(
+                ["git", "push"],
+                cwd=project_dir, check=True, capture_output=True,
+            )
+            slack_notify(
+                f"📦 Committed & pushed {len(new_transcripts)} transcript(s) to git.",
+                slack_token,
+            )
+        except subprocess.CalledProcessError as e:
+            slack_notify(
+                f"⚠️ Git commit/push failed: {e.stderr.decode()[-300:] if e.stderr else str(e)}",
+                slack_token,
+            )
 
     # Print new transcripts for the agent to pick up and process
     if new_transcripts:
