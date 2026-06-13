@@ -379,6 +379,7 @@ def _transcribe_single_file(
                     config=types.GenerateContentConfig(
                         response_mime_type="application/json",
                         response_schema=RESPONSE_SCHEMA,
+                        max_output_tokens=65536,
                     ),
                 )
                 # Check for None response (safety filters / empty output)
@@ -430,7 +431,7 @@ def transcribe_audio(
     ~14-minute chunks and each chunk is transcribed separately to avoid hitting
     Gemini's output token limit (which causes silent mid-sentence truncation).
     """
-    FALLBACK_MODELS = [model, "gemini-flash-latest", "gemini-3.5-flash"]
+    FALLBACK_MODELS = [model, "gemini-2.5-pro", "gemini-2.5-flash", "gemini-flash-latest"]
     seen: set = set()
     model_chain = [m for m in FALLBACK_MODELS if not (m in seen or seen.add(m))]  # type: ignore[func-returns-value]
 
