@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -417,6 +418,50 @@ def _transcribe_single_file(
     raise RuntimeError(f"All Gemini models failed for {chunk_label}. Last error: {last_error}")
 
 
+def _upload_wait_transcribe_chunk(
+    client,
+    chunk_path: Path,
+    model_chain: list[str],
+    owner_hint: str,
+    label: str,
+    slack_token: str | None,
+    thread_ts: str | None,
+) -> str:
+    """Upload a chunk, wait for Gemini to process it, transcribe, and clean up."""
+    uploaded = client.files.upload(file=chunk_path, config={"mime_type": "audio/mpeg"})
+    _wait_for_active(client, uploaded)
+    slack_notify(f"📝 Transcribing {label}...", slack_token, thread_ts=thread_ts)
+    text = _transcribe_single_file(client, uploaded, model_chain, owner_hint, label, slack_token, thread_ts)
+    chunk_path.unlink(missing_ok=True)
+    return text
+
+
+def _transcribe_chunks_parallel(
+    client,
+    chunks: list[Path],
+    model_chain: list[str],
+    owner_hint: str,
+    label_suffix: str,
+    slack_token: str | None,
+    thread_ts: str | None,
+) -> list[str]:
+    """Transcribe all chunks in parallel, returning results in order."""
+    n = len(chunks)
+    with ThreadPoolExecutor(max_workers=n) as executor:
+        future_to_index = {
+            executor.submit(
+                _upload_wait_transcribe_chunk,
+                client, chunk_path, model_chain, owner_hint,
+                f"chunk {i+1}/{n}{label_suffix}", slack_token, thread_ts,
+            ): i
+            for i, chunk_path in enumerate(chunks)
+        }
+        results: list[str] = [""] * n
+        for future in as_completed(future_to_index):
+            results[future_to_index[future]] = future.result()
+    return results
+
+
 def transcribe_audio(
     file_path: Path,
     api_key: str,
@@ -456,24 +501,9 @@ def transcribe_audio(
             f"⚙️ Long recording ({format_duration(duration)}) — splitting into {n} chunks for transcription.",
             slack_token, thread_ts=thread_ts,
         )
-        # Upload all chunks first
-        uploaded_chunks = []
-        for i, chunk_path in enumerate(chunks):
-            up = client.files.upload(file=chunk_path, config={"mime_type": "audio/mpeg"})
-            uploaded_chunks.append(up)
-        # Wait for all to be ACTIVE
-        for up in uploaded_chunks:
-            _wait_for_active(client, up)
-        # Transcribe each chunk
-        parts = []
-        for i, (up, chunk_path) in enumerate(zip(uploaded_chunks, chunks)):
-            label = f"chunk {i+1}/{n}"
-            slack_notify(f"📝 Transcribing {label}...", slack_token, thread_ts=thread_ts)
-            text = _transcribe_single_file(
-                client, up, model_chain, owner_hint, label, slack_token, thread_ts
-            )
-            parts.append(text)
-            chunk_path.unlink(missing_ok=True)
+        parts = _transcribe_chunks_parallel(
+            client, chunks, model_chain, owner_hint, "", slack_token, thread_ts
+        )
         return "\n\n".join(parts)
     else:
         uploaded = client.files.upload(file=audio_path, config={"mime_type": "audio/mpeg"})
@@ -495,21 +525,9 @@ def transcribe_audio(
                 f"⚙️ Re-splitting into {n} chunks for transcription.",
                 slack_token, thread_ts=thread_ts,
             )
-            uploaded_chunks = []
-            for chunk_path in chunks:
-                up = client.files.upload(file=chunk_path, config={"mime_type": "audio/mpeg"})
-                uploaded_chunks.append(up)
-            for up in uploaded_chunks:
-                _wait_for_active(client, up)
-            parts = []
-            for i, (up, chunk_path) in enumerate(zip(uploaded_chunks, chunks)):
-                label = f"chunk {i+1}/{n} (rechunked)"
-                slack_notify(f"📝 Transcribing {label}...", slack_token, thread_ts=thread_ts)
-                text = _transcribe_single_file(
-                    client, up, model_chain, owner_hint, label, slack_token, thread_ts
-                )
-                parts.append(text)
-                chunk_path.unlink(missing_ok=True)
+            parts = _transcribe_chunks_parallel(
+                client, chunks, model_chain, owner_hint, " (rechunked)", slack_token, thread_ts
+            )
             return "\n\n".join(parts)
 
 
