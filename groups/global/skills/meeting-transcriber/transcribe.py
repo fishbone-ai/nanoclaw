@@ -9,6 +9,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
@@ -447,22 +448,64 @@ def _transcribe_chunks_parallel(
     label_suffix: str,
     slack_token: str | None,
     thread_ts: str | None,
+    state_path: "Path | None" = None,
+    file_id: str | None = None,
 ) -> list[str]:
-    """Transcribe all chunks in parallel, returning results in order."""
+    """Transcribe all chunks in parallel, returning results in order.
+
+    If state_path and file_id are provided, each completed chunk is saved to the
+    state file immediately. If the process is killed and restarted, already-completed
+    chunks are skipped, so transcription resumes from where it left off.
+    """
     n = len(chunks)
-    with ThreadPoolExecutor(max_workers=n) as executor:
-        future_to_index = {
-            executor.submit(
-                _upload_wait_transcribe_chunk,
-                client, chunk_path, model_chain, owner_hint,
-                f"chunk {i+1}/{n}{label_suffix}", slack_token, thread_ts,
-            ): i
-            for i, chunk_path in enumerate(chunks)
-        }
-        results: list[str] = [""] * n
-        for future in as_completed(future_to_index):
-            results[future_to_index[future]] = future.result()
-    return results
+    state_lock = threading.Lock()
+
+    # Load any chunks already saved from a previous (killed) run
+    saved: dict[str, str] = {}
+    if state_path and file_id:
+        s = load_state(state_path)
+        saved = s.get("chunk_cache", {}).get(file_id, {})
+        if saved:
+            slack_notify(
+                f"♻️ Resuming: {len(saved)}/{n} chunks already done — skipping those.",
+                slack_token, thread_ts=thread_ts,
+            )
+
+    pending = [(i, chunk) for i, chunk in enumerate(chunks) if str(i) not in saved]
+    results: dict[str, str] = dict(saved)
+
+    def _save_chunk(index: int, text: str) -> None:
+        if not (state_path and file_id):
+            return
+        with state_lock:
+            s = load_state(state_path)
+            s.setdefault("chunk_cache", {}).setdefault(file_id, {})[str(index)] = text
+            save_state(state_path, s)
+
+    if pending:
+        with ThreadPoolExecutor(max_workers=len(pending)) as executor:
+            future_to_index = {
+                executor.submit(
+                    _upload_wait_transcribe_chunk,
+                    client, chunk_path, model_chain, owner_hint,
+                    f"chunk {i+1}/{n}{label_suffix}", slack_token, thread_ts,
+                ): i
+                for i, chunk_path in pending
+            }
+            for future in as_completed(future_to_index):
+                i = future_to_index[future]
+                text = future.result()
+                results[str(i)] = text
+                _save_chunk(i, text)  # persist immediately in case we get killed
+
+    # All chunks done — clean up chunk cache
+    if state_path and file_id:
+        with state_lock:
+            s = load_state(state_path)
+            s.get("chunk_cache", {}).pop(file_id, None)
+            save_state(state_path, s)
+
+    return [results[str(i)] for i in range(n)]
 
 
 def transcribe_audio(
@@ -472,6 +515,8 @@ def transcribe_audio(
     slack_token: str | None = None,
     thread_ts: str | None = None,
     owner: str | None = None,
+    state_path: "Path | None" = None,
+    file_id: str | None = None,
 ) -> str:
     """Transcribe an audio/video file.
 
@@ -508,7 +553,8 @@ def transcribe_audio(
             slack_token, thread_ts=thread_ts,
         )
         parts = _transcribe_chunks_parallel(
-            client, chunks, model_chain, owner_hint, "", slack_token, thread_ts
+            client, chunks, model_chain, owner_hint, "", slack_token, thread_ts,
+            state_path=state_path, file_id=file_id,
         )
         return "\n\n".join(parts)
     else:
@@ -532,7 +578,8 @@ def transcribe_audio(
                 slack_token, thread_ts=thread_ts,
             )
             parts = _transcribe_chunks_parallel(
-                client, chunks, model_chain, owner_hint, " (rechunked)", slack_token, thread_ts
+                client, chunks, model_chain, owner_hint, " (rechunked)", slack_token, thread_ts,
+                state_path=state_path, file_id=file_id,
             )
             return "\n\n".join(parts)
 
@@ -641,7 +688,10 @@ def main() -> None:
                 _current_recording = None
                 continue
 
-            transcript = transcribe_audio(local_path, api_key, model, slack_token, thread_ts=thread_ts, owner=rec.get("owner"))
+            transcript = transcribe_audio(
+                local_path, api_key, model, slack_token, thread_ts=thread_ts,
+                owner=rec.get("owner"), state_path=state_path, file_id=rec["id"],
+            )
             local_path.unlink(missing_ok=True)
 
             out_path = write_transcript(output_dir, rec, transcript)
