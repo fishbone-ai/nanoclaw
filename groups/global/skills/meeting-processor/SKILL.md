@@ -75,6 +75,24 @@ Search Linear for open issues that might already cover the proposed work.
 - Full overlap: reference the existing issue ID, don't suggest a new one.
 - Partial overlap: frame the new suggestion to cover only the non-overlapping scope; note the existing issue and explain why the new one isn't redundant.
 
+### 3d. If weekly kickoff: draft GOALS.md "This Week" section
+Detect if the transcript is a **weekly kickoff** (title contains "kickoff" or "weekly kickoff").
+
+If yes, draft a replacement "This Week" section for `/workspace/global/GOALS.md` using the language and decisions from the transcript. Include it at the bottom of the Slack summary under a new heading:
+
+```
+*Suggested GOALS.md update* (reply ✅ to apply, or give feedback)
+> ## 📅 This Week (YYYY-MM-DD → YYYY-MM-DD)
+> ...
+```
+
+When the user approves (✅ or explicit confirmation):
+1. Update `/workspace/global/GOALS.md`:
+   - Move the current "This Week" section's theme + outcome into the archive table
+   - Replace "This Week" section with the approved draft
+   - Update the North Star if the strategic direction has shifted
+2. Commit and push (see step 7)
+
 ### 4. Post summary to Slack (channel C0AQ6D4KPGQ)
 Use Python urllib directly — do NOT use the `message` tool (it posts as a reply) and do NOT use curl (shell variable expansion mangles multi-line text).
 
@@ -141,8 +159,8 @@ Add to `/workspace/global/learnings/YYYY-MM.md` (create if not exists):
 ```
 Use the Edit/Write tools directly.
 
-### 7. Commit to git
-After writing the transcript and learnings, commit them:
+### 7. Commit and push to git
+After writing the transcript and learnings, commit and push them:
 ```bash
-cd /workspace/project && git add groups/global/calls/meetings/ groups/global/learnings/ && git commit -m "feat(transcription): <meeting-title> YYYY-MM-DD"
+cd /workspace/project && git add groups/global/calls/meetings/ groups/global/learnings/ && git commit -m "feat(transcription): <meeting-title> YYYY-MM-DD" && git push
 ```

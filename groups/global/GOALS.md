@@ -3,21 +3,34 @@
 > **Status lives in Linear.** This file defines goals and maps them to Linear issues.
 > To check progress, look at the linked issues — not this file.
 
-## 🌟 North Star (updated 2026-06-07)
+## 🌟 North Star (updated 2026-06-27)
 
-Get a real WTP signal from FitBot before committing further. If billing doesn't convert, pivot fast. Parallel-track next direction research so the team isn't starting from zero if FitBot closes.
+Find a cyber/AI agent security direction worth building. Validate by failing to reject. If no thesis survives the full panel, pivot the research angle fast.
 
 ---
 
-## 📅 This Week (2026-06-07 → 2026-06-13)
+## 📅 This Week (2026-06-27 → 2026-07-03)
 
-**Theme:** WTP signal + next direction research
+**Theme:** Thesis rejection panel — cyber AI agent security
 
-Framework: *Goals = binary weekly commitments. All goals must be completable by Friday.*
+Framework: *A successful week is one where you tried to reject your theses and couldn't. Rejection = (a) talk to practitioners, (b) check competition. Both are binary. Failing to reject is itself a signal.*
 
-On path of **FitBot billing signal** — a successful week is such that by Friday ≥5 non-friends-and-family active users have paid. (~10 real users in scope; 5 paying = continue, fewer = close FitBot.) No new FitBot development this week — just enable billing, let it run, and track who pays and why. Owner: Both
+**Primary goal — thesis washing machine**
+Start with ≥4 theses. Each goes through the panel: ≥5 relevant practitioner conversations (CISOs don't count toward the 5) + competitive landscape check. By Friday: every thesis has been through the full panel.
 
-On path of **next direction shortlist** — a successful week is such that by Friday each founder has logged 1–2 hrs/day exploring their angle (Agentic Commerce, Cyber, B2B AI for sales/product) and the team has a ranked list of candidates worth a sprint. Monday sync at 10 to compare first reads. Owner: Both
+Current theses:
+1. **Version control / static governance** — compile-time audit trail on agent definitions; GRC/compliance angle; differentiates from Willow (runtime)
+2. **Memory poisoning / context injection** — persistent artifacts in agent memory; frame as business impact (churn, data exposure, compliance), not as a mechanism
+3. TBD — Ohav
+4. TBD — Avishay
+
+Owner: Both *(Goals revisit: Monday night or Tuesday)*
+
+**Secondary goal — relationship building**
+Every practitioner/CISO call ends with: *"When we're more baked on this, would you be open to talking again?"* CISOs count toward relationship pipeline even if not toward the thesis-validation 5. Owner: Both
+
+**Pipeline goal**
+Generate ≥4 new practitioner meetings for next week (currently only Monday + Tuesday booked). Owner: Both
 
 ---
 
@@ -33,6 +46,7 @@ On path of **next direction shortlist** — a successful week is such that by Fr
 | 2026-04-27 | Signal generation — parallel experiments, real data by Friday | FitBot WoZ (FB-209), stor.ai grocer pipeline (FB-195), new verticals (FB-210), Polonio/GMC (FB-211), Meta experiment (FB-212) — see Linear for outcomes |
 | 2026-05-25 | FitBot monetization sprint — billing, quality gate, go-to-market signal | Polar billing (FB-268), Codex verdict (FB-233), Assaf Nadar coffee (Ohav), validation milestone doc (Both), engaged user baseline (Both) |
 | 2026-06-07 | WTP signal + next direction research — FitBot billing go/no-go, pivot shortlist | Billing signal (≥5 non-F&F pay or close FitBot), next direction research (Agentic Commerce / Cyber / B2B AI) |
+| 2026-06-27 | Thesis rejection panel — cyber AI agent security | ≥4 theses through full panel (≥5 practitioners + competitive research each); ≥4 new practitioner meetings generated for next week |
 
 ---
 
