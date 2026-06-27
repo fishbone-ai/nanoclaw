@@ -13,7 +13,7 @@ Find a cyber/AI agent security direction worth building. Validate by failing to 
 
 **Theme:** Thesis rejection panel — cyber AI agent security
 
-Framework: *A successful week is one where you tried to reject your theses and couldn't. Rejection = (a) talk to practitioners, (b) check competition. Both are binary. Failing to reject is itself a signal.*
+Framework: *A successful week is one where each thesis was stress-tested: ≥5 qualified practitioners provided their read + competitive landscape researched per thesis. Whether theses survive rejection is signal — not the success criterion.*
 
 **Primary goal — thesis washing machine**
 Start with ≥4 theses. Each goes through the panel: ≥5 relevant practitioner conversations (CISOs don't count toward the 5) + competitive landscape check. By Friday: every thesis has been through the full panel.
