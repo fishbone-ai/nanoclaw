@@ -19,9 +19,9 @@ Framework: *A successful week is one where each thesis was stress-tested: ≥5 q
 Start with ≥4 theses. Each goes through the panel: ≥5 relevant practitioner conversations (CISOs don't count toward the 5) + competitive landscape check. By Friday: every thesis has been through the full panel.
 
 Current theses:
-1. **Version control / static governance** — compile-time audit trail on agent definitions; GRC/compliance angle; differentiates from Willow (runtime)
-2. **Memory poisoning / context injection** — persistent artifacts in agent memory; frame as business impact (churn, data exposure, compliance), not as a mechanism
-3. TBD — Ohav
+1. **Incident scoping impossibility** — enterprises running agents on regulated workflows can't tell which actions were driven by trustworthy vs. poisoned context; a single compromise triggers wrong actions across unbounded sessions; company can't scope, disclose, or prove remediation
+2. **Missing cryptographic delegation chain** — regulated enterprises can't let agents operate autonomously because no one can prove actions stayed within the scope originally authorized; behavioral monitoring tells you when it failed, can't prove it succeeded; what's missing: verifiable proof at every tool call
+3. **Agent governance / change management** — agent behavior isn't a file; it's prompts + tools + permissions + retrieval sources + model config across multiple systems; security can't answer the 4 required questions (what changed, who approved, what new actions possible, what new data reachable); result: agents blocked from high-stakes workflows
 4. TBD — Avishay
 
 Owner: Both *(Goals revisit: Monday night or Tuesday)*
