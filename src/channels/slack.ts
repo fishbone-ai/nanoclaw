@@ -93,9 +93,16 @@ export class SlackChannel implements Channel {
         url_private_download?: string;
         name?: string;
       };
+      type SlackAttachment = {
+        text?: string;
+        fallback?: string;
+        title?: string;
+        pretext?: string;
+      };
       const msgAny = msg as {
         files?: SlackFileRef[];
         file?: SlackFileRef;
+        attachments?: SlackAttachment[];
       };
       // file_share subtype uses singular `file`; newer uploads use plural `files`
       const files = msgAny.files?.length
@@ -106,7 +113,20 @@ export class SlackChannel implements Channel {
       const audioFile = files?.find((f) => f.mimetype?.startsWith('audio/'));
       const imageFiles =
         files?.filter((f) => f.mimetype?.startsWith('image/')) ?? [];
-      if (!msg.text && !audioFile && imageFiles.length === 0) return;
+      const textFiles =
+        files?.filter(
+          (f) =>
+            !f.mimetype?.startsWith('audio/') &&
+            !f.mimetype?.startsWith('image/'),
+        ) ?? [];
+      // Slack attachments: rich content blocks used for link unfurls, forwarded
+      // messages, and legacy formatted content. Extract text parts in order of
+      // specificity: pretext → title → text → fallback.
+      const attachmentText = (msgAny.attachments ?? [])
+        .map((a) => [a.pretext, a.title, a.text || a.fallback].filter(Boolean).join(' '))
+        .filter(Boolean)
+        .join('\n');
+      if (!msg.text && !audioFile && imageFiles.length === 0 && textFiles.length === 0 && !attachmentText) return;
 
       const jid = `slack:${msg.channel}`;
       const timestamp = new Date(parseFloat(msg.ts) * 1000).toISOString();
@@ -182,12 +202,23 @@ export class SlackChannel implements Channel {
                     : m.user
                       ? ((await this.resolveUserName(m.user)) ?? m.user)
                       : 'unknown';
-                  return `${who}: ${m.text || ''}`;
+                  const mAny = m as { attachments?: SlackAttachment[] };
+                  const mAttachmentText = (mAny.attachments ?? [])
+                    .map((a) => [a.pretext, a.title, a.text || a.fallback].filter(Boolean).join(' '))
+                    .filter(Boolean)
+                    .join('\n');
+                  const mContent = [m.text, mAttachmentText].filter(Boolean).join('\n');
+                  return `${who}: ${mContent}`;
                 }),
               );
               replyToContent = lines.join('\n');
             } else {
-              replyToContent = parent.text;
+              const parentAny = parent as { attachments?: SlackAttachment[] };
+              const parentAttachmentText = (parentAny.attachments ?? [])
+                .map((a) => [a.pretext, a.title, a.text || a.fallback].filter(Boolean).join(' '))
+                .filter(Boolean)
+                .join('\n');
+              replyToContent = [parent.text, parentAttachmentText].filter(Boolean).join('\n');
             }
           }
           // Bot is "in thread" if any message in the thread is from the bot
@@ -208,6 +239,9 @@ export class SlackChannel implements Channel {
       // Without the prefix, requiresTrigger=true on channel groups will
       // suppress agent invocation while still storing the message for context.
       let content = msg.text || '';
+      if (attachmentText) {
+        content = content ? `${content}\n${attachmentText}` : attachmentText;
+      }
       if (audioFile && !isBotMessage) {
         logger.info(
           {
@@ -236,6 +270,10 @@ export class SlackChannel implements Channel {
             ? `${content}\n[image attachment — download failed]`
             : `[image attachment — download failed]`;
         }
+      }
+      if (textFiles.length > 0 && !isBotMessage) {
+        const inlined = await this.downloadTextFiles(textFiles);
+        if (inlined) content = content ? `${content}\n${inlined}` : inlined;
       }
 
       if (!isBotMessage) {
@@ -404,6 +442,58 @@ export class SlackChannel implements Channel {
     }
 
     return results;
+  }
+
+  private async downloadTextFiles(
+    files: Array<{
+      id: string;
+      mimetype?: string;
+      url_private_download?: string;
+      name?: string;
+    }>,
+  ): Promise<string> {
+    const env = readEnvFile(['SLACK_BOT_TOKEN']);
+    const parts: string[] = [];
+
+    for (const file of files) {
+      try {
+        let downloadUrl = file.url_private_download;
+        if (!downloadUrl) {
+          const info = await this.app.client.files.info({ file: file.id });
+          downloadUrl = (info.file as { url_private_download?: string })
+            ?.url_private_download;
+        }
+        if (!downloadUrl) {
+          logger.warn({ fileId: file.id }, 'Slack: no download URL for file');
+          parts.push(`[attachment: ${file.name ?? file.id} — no download URL]`);
+          continue;
+        }
+
+        const resp = await fetch(downloadUrl, {
+          headers: { Authorization: `Bearer ${env.SLACK_BOT_TOKEN}` },
+        });
+        if (!resp.ok) {
+          logger.warn(
+            { status: resp.status, fileId: file.id },
+            'Slack: file download failed',
+          );
+          parts.push(`[attachment: ${file.name ?? file.id} — download failed]`);
+          continue;
+        }
+
+        const text = await resp.text();
+        logger.info(
+          { fileId: file.id, name: file.name, bytes: text.length },
+          'Slack: downloaded text file',
+        );
+        parts.push(`--- attachment: ${file.name ?? file.id} ---\n${text}\n--- end attachment ---`);
+      } catch (err) {
+        logger.warn({ err, fileId: file.id }, 'Slack: failed to download file');
+        parts.push(`[attachment: ${file.name ?? file.id} — error]`);
+      }
+    }
+
+    return parts.join('\n\n');
   }
 
   async connect(): Promise<void> {
