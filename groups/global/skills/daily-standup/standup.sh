@@ -38,7 +38,7 @@ get_issues() {
   curl -sS -X POST https://api.linear.app/graphql \
     -H "Authorization: $LINEAR_API_KEY" \
     -H "Content-Type: application/json" \
-    -d "{\"query\": \"{ issues(filter: { assignee: { id: { eq: \\\"$user_id\\\" } }, state: { type: { nin: [\\\"completed\\\", \\\"cancelled\\\"] } }, priority: { in: [1, 2] } }) { nodes { identifier title priority url } } }\" }" \
+    -d "{\"query\": \"{ issues(filter: { assignee: { id: { eq: \\\"$user_id\\\" } }, state: { type: { nin: [\\\"completed\\\", \\\"canceled\\\", \\\"duplicate\\\"] } }, priority: { in: [1, 2] } }) { nodes { identifier title priority url } } }\" }" \
   | python3 -c "
 import json, sys
 priority_map = {1: '🔴', 2: '🟠'}

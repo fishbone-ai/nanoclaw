@@ -11,7 +11,6 @@ import sys
 import tempfile
 import threading
 import unicodedata
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -323,6 +322,7 @@ RESPONSE_SCHEMA = {
 }
 
 
+
 def _wait_for_active(client, uploaded_file, timeout_polls: int = 30) -> None:
     """Poll until a Gemini uploaded file reaches ACTIVE state."""
     import time
@@ -440,7 +440,7 @@ def _upload_wait_transcribe_chunk(
     return text
 
 
-def _transcribe_chunks_parallel(
+def _transcribe_chunks_sequential(
     client,
     chunks: list[Path],
     model_chain: list[str],
@@ -451,14 +451,14 @@ def _transcribe_chunks_parallel(
     state_path: "Path | None" = None,
     file_id: str | None = None,
 ) -> list[str]:
-    """Transcribe all chunks in parallel, returning results in order.
+    """Transcribe chunks one at a time, passing the tail of each chunk as context
+    to the next so Gemini maintains consistent speaker labels across boundaries.
 
-    If state_path and file_id are provided, each completed chunk is saved to the
-    state file immediately. If the process is killed and restarted, already-completed
-    chunks are skipped, so transcription resumes from where it left off.
+    If state_path and file_id are provided, each completed chunk is saved immediately.
+    On restart, already-completed chunks are skipped and prior_context is rebuilt
+    from the last saved chunk.
     """
     n = len(chunks)
-    state_lock = threading.Lock()
 
     # Load any chunks already saved from a previous (killed) run
     saved: dict[str, str] = {}
@@ -471,39 +471,54 @@ def _transcribe_chunks_parallel(
                 slack_token, thread_ts=thread_ts,
             )
 
-    pending = [(i, chunk) for i, chunk in enumerate(chunks) if str(i) not in saved]
     results: dict[str, str] = dict(saved)
 
     def _save_chunk(index: int, text: str) -> None:
         if not (state_path and file_id):
             return
-        with state_lock:
-            s = load_state(state_path)
-            s.setdefault("chunk_cache", {}).setdefault(file_id, {})[str(index)] = text
-            save_state(state_path, s)
+        s = load_state(state_path)
+        s.setdefault("chunk_cache", {}).setdefault(file_id, {})[str(index)] = text
+        save_state(state_path, s)
 
-    if pending:
-        with ThreadPoolExecutor(max_workers=len(pending)) as executor:
-            future_to_index = {
-                executor.submit(
-                    _upload_wait_transcribe_chunk,
-                    client, chunk_path, model_chain, owner_hint,
-                    f"chunk {i+1}/{n}{label_suffix}", slack_token, thread_ts,
-                ): i
-                for i, chunk_path in pending
-            }
-            for future in as_completed(future_to_index):
-                i = future_to_index[future]
-                text = future.result()
-                results[str(i)] = text
-                _save_chunk(i, text)  # persist immediately in case we get killed
+    def _tail_lines(text: str, n_lines: int = 15) -> str:
+        lines = [ln for ln in text.strip().split("\n") if ln.strip()]
+        return "\n".join(lines[-n_lines:])
+
+    # Rebuild prior_context from the last already-saved chunk (resumability)
+    prior_context = ""
+    for i in range(n):
+        if str(i) in saved:
+            prior_context = _tail_lines(saved[str(i)])
+
+    for i, chunk_path in enumerate(chunks):
+        if str(i) in saved:
+            continue
+
+        label = f"chunk {i+1}/{n}{label_suffix}"
+
+        if prior_context:
+            chunk_hint = (
+                owner_hint
+                + "\n\n**הקשר מהחלק הקודם של ההקלטה:** "
+                "להלן השורות האחרונות שתומללו לפני החלק הנוכחי. "
+                "ההקלטה נמשכת ישירות מכאן — שמור על **אותם תיוגי דוברים** בדיוק:\n"
+                f"```\n{prior_context}\n```"
+            )
+        else:
+            chunk_hint = owner_hint
+
+        text = _upload_wait_transcribe_chunk(
+            client, chunk_path, model_chain, chunk_hint, label, slack_token, thread_ts,
+        )
+        results[str(i)] = text
+        _save_chunk(i, text)
+        prior_context = _tail_lines(text)
 
     # All chunks done — clean up chunk cache
     if state_path and file_id:
-        with state_lock:
-            s = load_state(state_path)
-            s.get("chunk_cache", {}).pop(file_id, None)
-            save_state(state_path, s)
+        s = load_state(state_path)
+        s.get("chunk_cache", {}).pop(file_id, None)
+        save_state(state_path, s)
 
     return [results[str(i)] for i in range(n)]
 
@@ -521,8 +536,8 @@ def transcribe_audio(
     """Transcribe an audio/video file.
 
     For recordings longer than CHUNK_THRESHOLD_SECONDS, the audio is split into
-    ~14-minute chunks and each chunk is transcribed separately to avoid hitting
-    Gemini's output token limit (which causes silent mid-sentence truncation).
+    ~8-minute chunks, transcribed in parallel, then a reconciliation pass unifies
+    speaker labels across chunk boundaries to avoid label drift.
     """
     FALLBACK_MODELS = [model, "gemini-2.5-pro", "gemini-2.5-flash", "gemini-flash-latest"]
     seen: set = set()
@@ -552,7 +567,7 @@ def transcribe_audio(
             f"⚙️ Long recording ({format_duration(duration)}) — splitting into {n} chunks for transcription.",
             slack_token, thread_ts=thread_ts,
         )
-        parts = _transcribe_chunks_parallel(
+        parts = _transcribe_chunks_sequential(
             client, chunks, model_chain, owner_hint, "", slack_token, thread_ts,
             state_path=state_path, file_id=file_id,
         )
@@ -564,7 +579,7 @@ def transcribe_audio(
             return _transcribe_single_file(
                 client, uploaded, model_chain, owner_hint, "full recording", slack_token, thread_ts
             )
-        except _MaxTokensError as exc:
+        except _MaxTokensError:
             # Gemini hit its output limit even on a "short" recording — fall back to chunking.
             slack_notify(
                 f"⚠️ MAX_TOKENS on full recording ({format_duration(duration or 0)}) — "
@@ -577,7 +592,7 @@ def transcribe_audio(
                 f"⚙️ Re-splitting into {n} chunks for transcription.",
                 slack_token, thread_ts=thread_ts,
             )
-            parts = _transcribe_chunks_parallel(
+            parts = _transcribe_chunks_sequential(
                 client, chunks, model_chain, owner_hint, " (rechunked)", slack_token, thread_ts,
                 state_path=state_path, file_id=file_id,
             )
