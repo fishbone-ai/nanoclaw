@@ -160,6 +160,31 @@ Theme tags: reuse existing tags when they fit — check current ones with
 spelling over inventing a synonym (e.g. use `ai-security`, not `security-for-ai`,
 if `ai-security` exists).
 
+### 4c. Extract candidate insights
+Insights are the reusable, cross-meeting-valuable nuggets from this meeting — a market **signal**, a
+**learning** about a customer/domain, a **risk**, an **opportunity**, or a **quote** worth remembering.
+They are NOT a restatement of the summary bullets. Extract 3-7 (fewer if the meeting is thin; zero is
+allowed for an empty/accidental recording).
+
+Skip if this meeting already has extracted insights:
+```python
+import sys
+sys.path.insert(0, "/workspace/global/skills/meeting-transcriber")
+import supabase_store
+if not supabase_store.meeting_has_extracted_insights("MEETING_ID"):
+    supabase_store.insert_insights("MEETING_ID", [
+        # category: signal | learning | risk | opportunity | quote | note
+        {"content": "Enterprise AI security budgets are moving from pilot to line-item in 2026.",
+         "category": "signal", "source": "extracted", "status": "candidate"},
+        {"content": "CISOs distrust agent autonomy without an audit trail — recurring objection.",
+         "category": "risk", "source": "extracted", "status": "candidate",
+         "quote": "I can't put an agent in prod if I can't see what it did"},
+    ])
+```
+Rules: `source` always `"extracted"`, `status` always `"candidate"`. `quote` is optional — include a
+short verbatim transcript excerpt when one crisply supports the insight. Keep `content` to one sentence.
+Never block the summary on this step; if it errors, report to the log channel and move on.
+
 ### 5. Create approved Linear issues
 Use `LINEAR_API_KEY` env var. For each approved item, create via the Linear API or curl:
 ```bash
