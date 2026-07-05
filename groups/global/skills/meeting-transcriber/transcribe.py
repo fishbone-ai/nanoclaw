@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
+import supabase_store
 from google import genai
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -43,6 +44,28 @@ def recording_slug(drive_file: dict) -> str:
     name_no_ext = original_name.rsplit(".", 1)[0] if "." in original_name else original_name
     slug = slugify(name_no_ext.lower())
     return slug if slug else f"recording-{drive_file['id']}"
+
+
+def meeting_id_for(drive_file: dict) -> str:
+    """Meeting id = transcript filename stem: YYYY-MM-DD-<slug>."""
+    created = drive_file.get("createdTime", "")
+    if created:
+        dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+        date_str = dt.strftime("%Y-%m-%d")
+    else:
+        date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return f"{date_str}-{recording_slug(drive_file)}"
+
+
+def infer_source(filename: str) -> str:
+    name = filename.lower()
+    if name.startswith("phone_"):
+        return "phone"
+    if name.startswith("whatsapp_"):
+        return "whatsapp"
+    if name.startswith("voice-"):
+        return "voice"
+    return "meet"
 
 
 def load_config() -> dict:
@@ -600,36 +623,6 @@ def transcribe_audio(
 
 
 # ---------------------------------------------------------------------------
-# File writing
-# ---------------------------------------------------------------------------
-
-def write_transcript(output_dir: Path, drive_file: dict, transcript: str) -> Path:
-    created = drive_file.get("createdTime", "")
-    if created:
-        dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
-        date_str = dt.strftime("%Y-%m-%d")
-    else:
-        date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-    original_name = drive_file["name"]
-    stem = recording_slug(drive_file)
-    filename = f"{date_str}-{stem}.md"
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-    out_path = output_dir / filename
-    out_path.write_text(
-        f"# Meeting Transcription -- {date_str}\n\n"
-        f"**Source:** {original_name}\n"
-        f"**Date:** {date_str}\n"
-        f"**Language:** Hebrew\n\n"
-        f"## Transcription\n\n"
-        f"{transcript}\n",
-        encoding="utf-8",
-    )
-    return out_path
-
-
-# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -640,14 +633,12 @@ def main() -> None:
 
     config = load_config()
     folder_ids: dict = config["drive_folder_ids"]
-    output_dir_rel: str = config.get("output_dir", "calls/meetings")
     model: str = config.get("model", "gemini-2.5-pro")
 
     api_key = os.environ.get("GEMINI_API_KEY") or sys.exit("GEMINI_API_KEY env var not set")
     slack_token = os.environ.get("SLACK_BOT_TOKEN")
 
-    output_dir = WORKSPACE / output_dir_rel
-    state_path = output_dir / ".transcriber-state.json"
+    state_path = SCRIPT_DIR / ".transcriber-state.json"
     state = load_state(state_path)
     processed_ids = set(state["processed"])
 
@@ -709,9 +700,17 @@ def main() -> None:
             )
             local_path.unlink(missing_ok=True)
 
-            out_path = write_transcript(output_dir, rec, transcript)
-            rel_transcript = str(out_path.relative_to(WORKSPACE))
-            print(f"  Wrote {rel_transcript}")
+            meeting_id = meeting_id_for(rec)
+            supabase_store.upsert_meeting({
+                "id": meeting_id,
+                "date": meeting_id[:10],
+                "owner": rec.get("owner"),
+                "language": "he",
+                "source": infer_source(rec["name"]),
+                "duration_seconds": raw_secs,
+                "transcript_md": transcript,
+            })
+            print(f"  Stored meeting {meeting_id} in Supabase")
 
             state["processed"].append(rec["id"])
             save_state(state_path, state)
@@ -719,10 +718,10 @@ def main() -> None:
             if thread_ts:
                 slack_react("white_check_mark", thread_ts, slack_token)
             slack_notify(
-                f"✅ Done: `{rel_transcript}` _{duration_str}_",
+                f"✅ Done: `{meeting_id}` _{duration_str}_",
                 slack_token, thread_ts=thread_ts,
             )
-            new_transcripts.append((rel_transcript, rec.get("owner")))
+            new_transcripts.append((meeting_id, rec.get("owner")))
             _current_recording = None
 
         except Exception as e:
@@ -735,41 +734,12 @@ def main() -> None:
             )
             continue
 
-    # Commit and push new transcripts to git
-    if new_transcripts:
-        try:
-            project_dir = Path("/workspace/project")
-            subprocess.run(
-                ["git", "add", "groups/global/calls/meetings/"],
-                cwd=project_dir, check=True, capture_output=True,
-            )
-            commit_msg = "feat(transcription): auto-transcribe " + ", ".join(
-                Path(p).stem for p, _ in new_transcripts
-            )
-            subprocess.run(
-                ["git", "commit", "-m", commit_msg],
-                cwd=project_dir, check=True, capture_output=True,
-            )
-            subprocess.run(
-                ["git", "push"],
-                cwd=project_dir, check=True, capture_output=True,
-            )
-            slack_notify(
-                f"📦 Committed & pushed {len(new_transcripts)} transcript(s) to git.",
-                slack_token,
-            )
-        except subprocess.CalledProcessError as e:
-            slack_notify(
-                f"⚠️ Git commit/push failed: {e.stderr.decode()[-300:] if e.stderr else str(e)}",
-                slack_token,
-            )
-
-    # Print new transcripts for the agent to pick up and process
+    # Print new meeting ids for the agent to pick up and process
     if new_transcripts:
         print("\nNEW_TRANSCRIPTS:")
-        for rel_path, owner in new_transcripts:
+        for meeting_id, owner in new_transcripts:
             owner_hint = f" (recorded from {owner}'s Drive)" if owner else ""
-            print(f"  {rel_path}{owner_hint}")
+            print(f"  {meeting_id}{owner_hint}")
     print("\nDone.")
 
 

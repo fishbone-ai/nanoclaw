@@ -46,3 +46,4 @@ nanoclaw.pid
 .claude/settings.local.json
 __pycache__/
 *.pyc
+groups/global/skills/meeting-transcriber/.transcriber-state.json
