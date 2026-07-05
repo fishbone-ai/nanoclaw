@@ -379,6 +379,8 @@ function buildContainerArgs(
     'GOOGLE_SERVICE_ACCOUNT_JSON',
     'META_ADS_TOKEN',
     'META_ADS_ACCOUNT_ID',
+    'SUPABASE_URL',
+    'SUPABASE_SERVICE_KEY',
   ]);
   for (const [key, value] of Object.entries(passthroughEnv)) {
     if (value) args.push('-e', `${key}=${value}`);
