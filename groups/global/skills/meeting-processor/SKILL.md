@@ -111,7 +111,7 @@ assert resp["ok"], resp
 Format:
 ```
 *Meeting: <title>* | YYYY-MM-DD
-_<meeting-id>_ | <https://fishbone-ai.github.io/meeting-insights/#/meeting/<meeting-id>|Open in dashboard>
+_<meeting-id>_ | <https://meetings.getfishbone.ai/#/meeting/<meeting-id>|Open in dashboard>
 
 *Participants*
 • Name 1, Name 2 (⚠️ Speaker 3 identity unclear — who is this?)
