@@ -108,6 +108,18 @@ class TestSupabaseStore(unittest.TestCase):
         self.assertEqual(body[1]["quote"], "q")
 
     @mock.patch("supabase_store.urlopen")
+    def test_insert_insights_normalizes_keys_across_items(self, urlopen):
+        urlopen.return_value = fake_response(201)
+        ss.insert_insights("m1", [
+            {"content": "no quote here", "category": "signal", "source": "extracted", "status": "candidate"},
+            {"content": "note", "category": "note", "quote": "q", "source": "manual", "status": "accepted"},
+        ])
+        req = urlopen.call_args[0][0]
+        body = json.loads(req.data)
+        self.assertEqual(set(body[0].keys()), set(body[1].keys()))
+        self.assertIsNone(body[0]["quote"])
+
+    @mock.patch("supabase_store.urlopen")
     def test_insert_insights_empty_is_noop(self, urlopen):
         ss.insert_insights("m1", [])
         urlopen.assert_not_called()

@@ -97,7 +97,14 @@ def save_summary(
 def insert_insights(meeting_id: str, items: list[dict]) -> None:
     if not items:
         return
-    _request("POST", "insights", body=[{"meeting_id": meeting_id, **item} for item in items])
+    all_keys = {"meeting_id"}
+    for item in items:
+        all_keys.update(item.keys())
+    rows = [
+        {key: {"meeting_id": meeting_id, **item}.get(key) for key in all_keys}
+        for item in items
+    ]
+    _request("POST", "insights", body=rows)
 
 
 def meeting_has_extracted_insights(meeting_id: str) -> bool:
