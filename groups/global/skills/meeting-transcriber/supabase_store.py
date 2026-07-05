@@ -92,3 +92,17 @@ def save_summary(
             "POST", "themes",
             body=[{"meeting_id": meeting_id, "theme": t} for t in themes],
         )
+
+
+def insert_insights(meeting_id: str, items: list[dict]) -> None:
+    if not items:
+        return
+    _request("POST", "insights", body=[{"meeting_id": meeting_id, **item} for item in items])
+
+
+def meeting_has_extracted_insights(meeting_id: str) -> bool:
+    rows = _request(
+        "GET",
+        f"insights?meeting_id=eq.{quote(meeting_id)}&source=eq.extracted&select=id&limit=1",
+    )
+    return bool(rows)

@@ -92,6 +92,40 @@ class TestSupabaseStore(unittest.TestCase):
         with self.assertRaises(ss.SupabaseError):
             ss.upsert_meeting({"id": "m1", "date": "2026-07-05"})
 
+    @mock.patch("supabase_store.urlopen")
+    def test_insert_insights_posts_rows_with_meeting_id(self, urlopen):
+        urlopen.return_value = fake_response(201)
+        ss.insert_insights("m1", [
+            {"content": "AI budgets rising", "category": "signal", "source": "extracted", "status": "candidate"},
+            {"content": "note", "category": "note", "quote": "q", "source": "manual", "status": "accepted"},
+        ])
+        req = urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertIn("/rest/v1/insights", req.full_url)
+        body = json.loads(req.data)
+        self.assertEqual(body[0]["meeting_id"], "m1")
+        self.assertEqual(body[0]["category"], "signal")
+        self.assertEqual(body[1]["quote"], "q")
+
+    @mock.patch("supabase_store.urlopen")
+    def test_insert_insights_empty_is_noop(self, urlopen):
+        ss.insert_insights("m1", [])
+        urlopen.assert_not_called()
+
+    @mock.patch("supabase_store.urlopen")
+    def test_meeting_has_extracted_insights(self, urlopen):
+        urlopen.return_value = fake_response(200, json.dumps([{"id": "i1"}]).encode())
+        self.assertTrue(ss.meeting_has_extracted_insights("m1"))
+        url = urlopen.call_args[0][0].full_url
+        self.assertIn("insights?", url)
+        self.assertIn("meeting_id=eq.m1", url)
+        self.assertIn("source=eq.extracted", url)
+
+    @mock.patch("supabase_store.urlopen")
+    def test_meeting_has_extracted_insights_false_when_empty(self, urlopen):
+        urlopen.return_value = fake_response(200, b"[]")
+        self.assertFalse(ss.meeting_has_extracted_insights("m1"))
+
 
 if __name__ == "__main__":
     unittest.main()
