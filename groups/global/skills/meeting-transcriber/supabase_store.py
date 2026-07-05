@@ -54,8 +54,11 @@ def get_meeting(meeting_id: str, columns: str = "*") -> dict | None:
     return rows[0] if rows else None
 
 
-def pending_meetings() -> list[dict]:
-    return _request("GET", "meetings?summary_md=is.null&select=id,owner&order=date.asc") or []
+def pending_meetings(limit: int | None = None) -> list[dict]:
+    path = "meetings?summary_md=is.null&select=id,owner&order=date.asc"
+    if limit:
+        path += f"&limit={limit}"
+    return _request("GET", path) or []
 
 
 def save_summary(

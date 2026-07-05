@@ -48,6 +48,15 @@ class TestSupabaseStore(unittest.TestCase):
         self.assertIn("summary_md=is.null", urlopen.call_args[0][0].full_url)
 
     @mock.patch("supabase_store.urlopen")
+    def test_pending_meetings_respects_limit(self, urlopen):
+        urlopen.return_value = fake_response(200, b"[]")
+        ss.pending_meetings(limit=5)
+        self.assertIn("limit=5", urlopen.call_args[0][0].full_url)
+        urlopen.return_value = fake_response(200, b"[]")
+        ss.pending_meetings()
+        self.assertNotIn("limit=", urlopen.call_args[0][0].full_url)
+
+    @mock.patch("supabase_store.urlopen")
     def test_save_summary_patches_then_replaces_children(self, urlopen):
         urlopen.return_value = fake_response(204, b"")
         ss.save_summary(

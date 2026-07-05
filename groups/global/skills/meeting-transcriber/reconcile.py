@@ -28,12 +28,14 @@ def main() -> None:
         print("Another reconciler instance is running. Exiting.")
         return
 
-    pending = supabase_store.pending_meetings()
+    # Cap per cycle so a large backlog (e.g. post-backfill) drains gradually
+    # instead of asking the agent to process 100+ meetings in one session.
+    pending = supabase_store.pending_meetings(limit=5)
     if not pending:
         print("No pending summaries to reconcile.")
         return
 
-    print(f"Found {len(pending)} meeting(s) without summaries:")
+    print(f"Found {len(pending)} meeting(s) without summaries (max 5 per cycle):")
     print("\nPENDING_TRANSCRIPTS:")
     for row in pending:
         owner = row.get("owner")
