@@ -1,41 +1,39 @@
 ---
 name: meeting-processor
 description: >
-  Process a meeting transcript from the workspace. Given a file path (e.g. calls/meetings/2026-03-15-standup.md),
-  reads the transcript, infers participants, extracts summary/action items/decisions/blockers/learnings,
-  posts a summary to Slack #meeting-summaries, and suggests Linear issues for approval before creating them.
+  Process a meeting transcript from the Supabase meeting store. Given a meeting id (e.g. 2026-03-15-standup),
+  reads the transcript row, infers participants, extracts summary/action items/decisions/blockers/learnings,
+  saves the structured summary back to Supabase, posts a summary to Slack #meeting-summaries,
+  and suggests Linear issues for approval before creating them.
 ---
 
 # meeting-processor
 
 ## Workflow
 
-### 0. Extract path and dedup check
-The trigger message contains a path like:
+### 0. Extract meeting id and dedup check
+The trigger message contains a meeting id like:
 ```
-Process meeting transcript: `calls/meetings/2026-03-16-cpw-tmrf-adq-....md`
+Process meeting transcript: `2026-07-05-bxw-faqy-yqf-2026-07-05-15-47-gmt-3`
 ```
+(Legacy triggers may pass a path like `calls/meetings/<id>.md` — the id is the filename stem. Only process the explicitly specified meeting.)
 
-1. **Extract the exact path** from the backtick-quoted portion. Only process the explicitly specified file.
-
-2. **Dedup check** — search Slack channel `C0AQ6D4KPGQ` (#meeting-summaries) for a message containing both "Meeting:" and the filename stem. If a summary already exists, stop.
-
+Fetch the row and stop if it is already summarized:
 ```python
-import json, os, urllib.request
-from urllib.parse import urlencode
-token = os.environ["SLACK_BOT_TOKEN"]
-stem = "FILENAME_STEM_HERE"
-params = urlencode({"channel": "C0AQ6D4KPGQ", "limit": 100})
-req = urllib.request.Request(
-    f"https://slack.com/api/conversations.history?{params}",
-    headers={"Authorization": f"Bearer {token}"},
-)
-msgs = json.loads(urllib.request.urlopen(req).read()).get("messages", [])
-already_posted = any("Meeting:" in (m.get("text") or "") and stem in (m.get("text") or "") for m in msgs)
+import sys
+sys.path.insert(0, "/workspace/global/skills/meeting-transcriber")
+import supabase_store
+row = supabase_store.get_meeting("MEETING_ID", columns="id,owner,summary_md,transcript_md")
+if row is None:
+    print("No such meeting row — report this to the log channel and stop.")
+elif row["summary_md"]:
+    print("Already summarized — stop, post nothing.")
 ```
 
-### 1. Fetch the transcript
-Read the file directly from `/workspace/global/<path>` using the Read tool.
+### 1. Read the transcript
+Use `row["transcript_md"]` from step 0. If the row is missing but a legacy file
+exists at `/workspace/global/calls/meetings/<id>.md`, read that file, then create
+the row first with `supabase_store.upsert_meeting({"id": MEETING_ID, "date": MEETING_ID[:10], "transcript_md": ...})`.
 
 ### 2. Infer participants
 Transcripts use `[Speaker Name]` or `[דובר N]` tags. Avishay (אבישי) and Ohav (אוהב) are always the known team members. If owner hint is given ("recorded from Ohav's Drive"), use that.
@@ -113,7 +111,7 @@ assert resp["ok"], resp
 Format:
 ```
 *Meeting: <title>* | YYYY-MM-DD
-_<filename-stem>_ | <https://github.com/fishbone-ai/nanoclaw/blob/main/groups/global/calls/meetings/<filename>.md|Transcription>
+_<meeting-id>_ | <https://fishbone-ai.github.io/meeting-insights/#/meeting/<meeting-id>|Open in dashboard>
 
 *Participants*
 • Name 1, Name 2 (⚠️ Speaker 3 identity unclear — who is this?)
@@ -132,6 +130,35 @@ _<filename-stem>_ | <https://github.com/fishbone-ai/nanoclaw/blob/main/groups/gl
 1. [high] Title — Description
    _Validates assumption #N (FB-XXX) — <rationale> / Sub-issue of FB-XXX / Enabler_
 ```
+
+### 4b. Save the structured summary to Supabase
+This is what makes the meeting a first-class data citizen — never skip it.
+Use the `ts` returned by `chat.postMessage` in step 4.
+
+```python
+import sys
+sys.path.insert(0, "/workspace/global/skills/meeting-transcriber")
+import supabase_store
+
+supabase_store.save_summary(
+    "MEETING_ID",
+    summary_md=SUMMARY_MD,      # markdown: ## Summary / ## Decisions / ## Blockers / ## Learnings sections
+    title="MEETING_TITLE",
+    mtype="discovery-call",     # one of: discovery-call | vc-meeting | internal-strategy | phone-call | weekly-retro | weekly-kickoff | other
+    slack_ts=POSTED_TS,         # ts returned by chat.postMessage
+    participants=[
+        # category: founder | practitioner | vc | advisor | other; role/company optional, omit if unknown
+        {"name": "Avishay", "category": "founder"},
+        {"name": "Dana Cohen", "category": "practitioner", "role": "CISO", "company": "Acme"},
+    ],
+    themes=["ai-security", "vc-readiness"],   # 2-5 kebab-case tags
+)
+```
+
+Theme tags: reuse existing tags when they fit — check current ones with
+`supabase_store._request("GET", "themes?select=theme")` and prefer an existing
+spelling over inventing a synonym (e.g. use `ai-security`, not `security-for-ai`,
+if `ai-security` exists).
 
 ### 5. Create approved Linear issues
 Use `LINEAR_API_KEY` env var. For each approved item, create via the Linear API or curl:
@@ -159,8 +186,8 @@ Add to `/workspace/global/learnings/YYYY-MM.md` (create if not exists):
 ```
 Use the Edit/Write tools directly.
 
-### 7. Commit and push to git
-After writing the transcript and learnings, commit and push them:
+### 7. Commit and push learnings
 ```bash
-cd /workspace/project && git add groups/global/calls/meetings/ groups/global/learnings/ && git commit -m "feat(transcription): <meeting-title> YYYY-MM-DD" && git push
+cd /workspace/project && git add groups/global/learnings/ && git commit -m "docs(learnings): <meeting-title> YYYY-MM-DD" && git push
 ```
+(Transcripts are no longer committed — they live in Supabase.)
