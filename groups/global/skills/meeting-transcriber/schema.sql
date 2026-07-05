@@ -52,3 +52,30 @@ $$ language plpgsql;
 drop trigger if exists meetings_updated_at on meetings;
 create trigger meetings_updated_at before update on meetings
   for each row execute function set_updated_at();
+
+-- Curated per-meeting insights (see 2026-07-05-meeting-insights-curation-design.md)
+create table if not exists insights (
+  id          uuid primary key default gen_random_uuid(),
+  meeting_id  text not null references meetings(id) on delete cascade,
+  content     text not null,
+  category    text not null default 'note' check (category in ('signal','learning','risk','opportunity','quote','note')),
+  status      text not null default 'candidate' check (status in ('candidate','accepted','rejected')),
+  source      text not null check (source in ('extracted','manual')),
+  quote       text,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists insights_meeting_idx on insights (meeting_id);
+create index if not exists insights_feed_idx on insights (status, created_at desc);
+
+alter table insights enable row level security;
+drop policy if exists anon_read_insights   on insights;
+drop policy if exists anon_insert_insights on insights;
+drop policy if exists anon_update_insights on insights;
+create policy anon_read_insights   on insights for select to anon using (true);
+create policy anon_insert_insights on insights for insert to anon with check (true);
+create policy anon_update_insights on insights for update to anon using (true) with check (true);
+
+drop trigger if exists insights_updated_at on insights;
+create trigger insights_updated_at before update on insights
+  for each row execute function set_updated_at();
