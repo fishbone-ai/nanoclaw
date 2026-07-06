@@ -82,6 +82,8 @@ create trigger insights_updated_at before update on insights
 
 -- ── Full-text search (see 2026-07-06-meeting-search-design.md) ──────────────
 -- Generated tsvector columns (explicit regconfig => IMMUTABLE => allowed as STORED).
+-- NOTE: add-column-if-not-exists won't update an existing column's generation
+-- expression. To change a vector definition later, drop the column first.
 alter table meetings add column if not exists summary_vec tsvector
   generated always as (
     setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
@@ -143,7 +145,8 @@ as $func$
           select 1 from participants p where p.meeting_id = m.id and p.name ilike '%'||participant||'%'))
   union all
   select 'insight'::text, m.id, m.title, m.date,
-         coalesce(i.quote, i.content),
+         ts_headline('english', coalesce(i.content, i.quote, ''), qe.tsq,
+                     'StartSel=*, StopSel=*, MaxWords=35, MinWords=15, ShortWord=2'),
          (case when qe.tsq is null then 0 else ts_rank(i.search_vec, qe.tsq) end * 0.8)::real
   from insights i join meetings m on m.id = i.meeting_id, qe
   where 'insight' = any(sources)
