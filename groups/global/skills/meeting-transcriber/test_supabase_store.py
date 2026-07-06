@@ -138,6 +138,36 @@ class TestSupabaseStore(unittest.TestCase):
         urlopen.return_value = fake_response(200, b"[]")
         self.assertFalse(ss.meeting_has_extracted_insights("m1"))
 
+    @mock.patch("supabase_store.urlopen")
+    def test_search_meetings_posts_rpc_with_filtered_body(self, urlopen):
+        urlopen.return_value = fake_response(200, json.dumps([
+            {"source": "summary", "meeting_id": "m1", "title": "T",
+             "date": "2026-06-30", "snippet": "...*audit*...", "rank": 0.51},
+        ]).encode())
+        rows = ss.search_meetings("audit trail", participant="Dana", date_from="2026-06-01")
+        req = urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertIn("/rest/v1/rpc/search_meetings", req.full_url)
+        body = json.loads(req.data)
+        # None args dropped; max_results always sent; q mapped from query
+        self.assertEqual(body, {"q": "audit trail", "participant": "Dana",
+                                "date_from": "2026-06-01", "max_results": 20})
+        self.assertEqual(rows[0]["url"], "https://meetings.getfishbone.ai/#/meeting/m1")
+
+    @mock.patch("supabase_store.urlopen")
+    def test_search_meetings_filters_only_omits_q(self, urlopen):
+        urlopen.return_value = fake_response(200, b"[]")
+        ss.search_meetings(mtype="vc-meeting", limit=5)
+        body = json.loads(urlopen.call_args[0][0].data)
+        self.assertNotIn("q", body)
+        self.assertEqual(body["mtype"], "vc-meeting")
+        self.assertEqual(body["max_results"], 5)
+
+    @mock.patch("supabase_store.urlopen")
+    def test_search_meetings_empty_returns_list(self, urlopen):
+        urlopen.return_value = fake_response(200, b"[]")
+        self.assertEqual(ss.search_meetings("nothing matches"), [])
+
 
 if __name__ == "__main__":
     unittest.main()

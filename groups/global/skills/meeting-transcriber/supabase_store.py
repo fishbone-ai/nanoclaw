@@ -113,3 +113,20 @@ def meeting_has_extracted_insights(meeting_id: str) -> bool:
         f"insights?meeting_id=eq.{quote(meeting_id)}&source=eq.extracted&select=id&limit=1",
     )
     return bool(rows)
+
+
+def search_meetings(query=None, sources=None, participant=None, mtype=None,
+                    date_from=None, date_to=None, limit=20) -> list[dict]:
+    """Keyword search across meeting summaries, transcripts, and insights.
+    Calls the search_meetings SQL function via PostgREST RPC. Returns ranked
+    hits, each decorated with a dashboard url. query=None => filters-only."""
+    args = {
+        "q": query, "sources": sources, "participant": participant,
+        "mtype": mtype, "date_from": date_from, "date_to": date_to,
+        "max_results": limit,
+    }
+    rows = _request("POST", "rpc/search_meetings",
+                    body={k: v for k, v in args.items() if v is not None}) or []
+    for r in rows:
+        r["url"] = f"https://meetings.getfishbone.ai/#/meeting/{r['meeting_id']}"
+    return rows
