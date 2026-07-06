@@ -204,6 +204,7 @@ Available skills in `/workspace/global/skills/`:
 | Skill | File | When to use |
 |-------|------|-------------|
 | meeting-processor | `skills/meeting-processor/SKILL.md` | Analyze a meeting transcript from the Supabase store, save structured summary back, post to #meeting-summaries, suggest Linear issues. Dashboard: https://meetings.getfishbone.ai/ |
+| meeting-search | `skills/meeting-search/SKILL.md` | Search & refer to past meetings and notes — find meetings by topic/person/date, recall decisions, check if we've heard something before. Dashboard: https://meetings.getfishbone.ai/ |
 | linear | `skills/linear/SKILL.md` | Query or manage Linear issues, projects, team workflows; daily standup summaries |
 | venture-evaluation | `skills/venture-evaluation/SKILL.md` | Evaluate a venture idea against the Fishbone rubric (quick filter + scored research) |
 | daily-standup | `skills/daily-standup/SKILL.md` | Post weekday async standup check-ins to Slack (scheduled task — runs `standup.sh`) |
