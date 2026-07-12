@@ -412,10 +412,13 @@ async function runQuery(
   let messageCount = 0;
   let resultCount = 0;
 
-  // Load global CLAUDE.md as additional system context (shared across all groups)
+  // Load global CLAUDE.md as additional system context (shared across ALL groups,
+  // including main). Main channels need the FishboneClaw skills table too — without
+  // it the interactive agent can't discover skills like meeting-search /
+  // meeting-processor (scheduled tasks name skills explicitly, but chat does not).
   const globalClaudeMdPath = '/workspace/global/CLAUDE.md';
   let globalClaudeMd: string | undefined;
-  if (!containerInput.isMain && fs.existsSync(globalClaudeMdPath)) {
+  if (fs.existsSync(globalClaudeMdPath)) {
     globalClaudeMd = fs.readFileSync(globalClaudeMdPath, 'utf-8');
   }
 
